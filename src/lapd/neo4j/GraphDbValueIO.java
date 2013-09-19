@@ -46,11 +46,18 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 	@Override
 	public void write(String id, IValue value) throws GraphDbMappingException {
 		Transaction tx = graphDb.beginTx();
-		Node node = value.accept(graphDbValueInsertionVisitor);
-		node.setProperty("id", id);
-		nodeIndex.add(node, "id", id);
-		tx.success();
-		tx.finish();		
+		try {
+			Node node = value.accept(graphDbValueInsertionVisitor);
+			node.setProperty("id", id);
+			nodeIndex.add(node, "id", id);
+			tx.success();
+		}
+		catch (Exception e) { 
+			throw new GraphDbMappingException(e.getMessage()); 
+		}
+		finally {
+			tx.finish();
+		}
 	}
 
 	@Override
