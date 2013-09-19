@@ -40,7 +40,7 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 	}
 
 	@Override
-	public void write(IValue value) throws GraphDbMappingException {
+	public void write(String id, IValue value) throws GraphDbMappingException {
 		Transaction tx = graphDb.beginTx();
 		value.accept(graphDbValueVisitor);
 		tx.success();
@@ -48,9 +48,8 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 	}
 
 	@Override
-	public void read() {
-		// TODO Auto-generated method stub
-		
+	public <T> T read(String id, T value) {
+		return null;		
 	}
 
 }

@@ -2,6 +2,8 @@ package lapd.neo4j.test;
 
 import static org.junit.Assert.*;
 
+import java.util.UUID;
+
 import lapd.neo4j.GraphDbValueIO;
 import lapd.neo4j.IGraphDbValueIO;
 
@@ -16,7 +18,7 @@ public class TestAPIWithRealPersistentDb {
 	public void testWrite() {
 		try {
 			IGraphDbValueIO graphDbAPI = new GraphDbValueIO();
-			graphDbAPI.write(ValueFactory.getInstance().integer(5));
+			graphDbAPI.write(UUID.randomUUID().toString(), ValueFactory.getInstance().integer(5));
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}	
