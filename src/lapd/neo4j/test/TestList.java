@@ -17,7 +17,7 @@ public class TestList extends BaseGraphDbTest {
 		IList booleanList = createBooleanList();
 		Transaction tx = graphDb.beginTx();
 		try {
-			booleanList.accept(graphDbValueVisitor);
+			booleanList.accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {
@@ -41,7 +41,7 @@ public class TestList extends BaseGraphDbTest {
 		IList integerList = createIntegerList();
 		Transaction tx = graphDb.beginTx();
 		try {
-			integerList.accept(graphDbValueVisitor);
+			integerList.accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {
@@ -67,7 +67,7 @@ public class TestList extends BaseGraphDbTest {
 		IList listOfLists = valueFactory.list(integerList1, integerList2);
 		Transaction tx = graphDb.beginTx();
 		try {
-			listOfLists.accept(graphDbValueVisitor);
+			listOfLists.accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {

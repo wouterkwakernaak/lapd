@@ -29,9 +29,9 @@ public class TestConstructor extends BaseGraphDbTest {
 			Type constructorX = typeFactory.constructor(typeStore, adt, "someConstructorX");
 			Type constructorY = typeFactory.constructor(typeStore, adt, "someConstructorY", 
 					typeFactory.boolType(), typeFactory.integerType());
-			valueFactory.constructor(constructorX).accept(graphDbValueVisitor);
+			valueFactory.constructor(constructorX).accept(graphDbValueInsertionVisitor);
 			valueFactory.constructor(constructorY, valueFactory.bool(true), 
-					valueFactory.datetime(System.currentTimeMillis())).accept(graphDbValueVisitor);
+					valueFactory.datetime(System.currentTimeMillis())).accept(graphDbValueInsertionVisitor);
 			tx.success();
 		} 
 		catch (Exception e) {

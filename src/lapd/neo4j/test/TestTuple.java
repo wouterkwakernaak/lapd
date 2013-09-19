@@ -31,7 +31,7 @@ public class TestTuple extends BaseGraphDbTest {
 	public void testInsertNullaryTuple() {
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.tuple().accept(graphDbValueVisitor);			
+			valueFactory.tuple().accept(graphDbValueInsertionVisitor);			
 			tx.success();
 		}
 		catch(Exception e) {
@@ -48,7 +48,7 @@ public class TestTuple extends BaseGraphDbTest {
 		Transaction tx = graphDb.beginTx();
 		IValue[] tupleElements = createTupleElements();
 		try {
-			valueFactory.tuple(tupleElements).accept(graphDbValueVisitor);
+			valueFactory.tuple(tupleElements).accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {
@@ -73,7 +73,7 @@ public class TestTuple extends BaseGraphDbTest {
 		Type tupleType = createTupleType();
 		IValue[] tupleElements = createTupleElements();
 		try {
-			valueFactory.tuple(tupleType, tupleElements).accept(graphDbValueVisitor);
+			valueFactory.tuple(tupleType, tupleElements).accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {

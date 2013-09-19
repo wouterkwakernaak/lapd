@@ -14,7 +14,7 @@ public class TestPrimitives extends BaseGraphDbTest {
 		final Integer intUnderTest = 13;
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.integer(intUnderTest).accept(graphDbValueVisitor);
+			valueFactory.integer(intUnderTest).accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch (Exception e) {
@@ -34,7 +34,7 @@ public class TestPrimitives extends BaseGraphDbTest {
 		String stringUndertest = "testing this stuff";
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.string(stringUndertest).accept(graphDbValueVisitor);
+			valueFactory.string(stringUndertest).accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {
@@ -54,7 +54,7 @@ public class TestPrimitives extends BaseGraphDbTest {
 		boolean boolUndertest = true;
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.bool(boolUndertest).accept(graphDbValueVisitor);
+			valueFactory.bool(boolUndertest).accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {
@@ -74,7 +74,7 @@ public class TestPrimitives extends BaseGraphDbTest {
 		Double realUndertest = 4.489689023;
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.real(realUndertest).accept(graphDbValueVisitor);
+			valueFactory.real(realUndertest).accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {
@@ -95,7 +95,7 @@ public class TestPrimitives extends BaseGraphDbTest {
 		Integer denominator = 3;
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.rational(numerator, denominator).accept(graphDbValueVisitor);
+			valueFactory.rational(numerator, denominator).accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {
@@ -117,7 +117,7 @@ public class TestPrimitives extends BaseGraphDbTest {
 		long dateTimeUnderTest = System.currentTimeMillis();
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.datetime(dateTimeUnderTest).accept(graphDbValueVisitor);
+			valueFactory.datetime(dateTimeUnderTest).accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {
@@ -141,7 +141,7 @@ public class TestPrimitives extends BaseGraphDbTest {
 		String serializedPath = loc.toString();
 		Transaction tx = graphDb.beginTx();
 		try {
-			loc.accept(graphDbValueVisitor);
+			loc.accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {

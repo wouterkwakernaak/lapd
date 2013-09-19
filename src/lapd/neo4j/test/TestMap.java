@@ -17,7 +17,7 @@ public class TestMap extends BaseGraphDbTest {
 		IMap map = mapWriter.done();
 		Transaction tx = graphDb.beginTx();
 		try {
-			map.accept(graphDbValueVisitor);
+			map.accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {

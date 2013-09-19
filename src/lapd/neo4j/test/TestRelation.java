@@ -14,7 +14,7 @@ public class TestRelation extends BaseGraphDbTest {
 		IValue tuple2 = valueFactory.tuple(new IValue[] { valueFactory.integer(2), valueFactory.string("two") });
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.set(tuple1, tuple2).accept(graphDbValueVisitor);
+			valueFactory.set(tuple1, tuple2).accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {

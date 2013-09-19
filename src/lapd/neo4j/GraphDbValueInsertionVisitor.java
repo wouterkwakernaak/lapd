@@ -21,11 +21,11 @@ import org.eclipse.imp.pdb.facts.type.Type;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-public class GraphDbValueVisitor implements org.eclipse.imp.pdb.facts.visitors.IValueVisitor<Node, GraphDbMappingException> {
+public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.visitors.IValueVisitor<Node, GraphDbMappingException> {
 
 	private GraphDatabaseService graphDb;
 	
-	public GraphDbValueVisitor(GraphDatabaseService graphDb) {
+	public GraphDbValueInsertionVisitor(GraphDatabaseService graphDb) {
 		this.graphDb = graphDb;	
 	}
 	

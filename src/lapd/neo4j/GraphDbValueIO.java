@@ -9,17 +9,20 @@ import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.index.Index;
 
 public class GraphDbValueIO implements IGraphDbValueIO {
 	
-	private GraphDbValueVisitor graphDbValueVisitor;
-	private GraphDatabaseService graphDb;
+	private final GraphDbValueInsertionVisitor graphDbValueInsertionVisitor;
+	private final GraphDatabaseService graphDb;
+	private final Index<Node> nodeIndex;
 	
 	public GraphDbValueIO() throws IOException {
 		String dbPath = getDbPath();
-		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
+		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);		
 		registerShutdownHook(graphDb);
-		graphDbValueVisitor = new GraphDbValueVisitor(graphDb);		
+		nodeIndex = graphDb.index().forNodes("nodes");
+		graphDbValueInsertionVisitor = new GraphDbValueInsertionVisitor(graphDb);		
 	}
 
 	private String getDbPath() throws IOException {
@@ -43,15 +46,18 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 	@Override
 	public void write(String id, IValue value) throws GraphDbMappingException {
 		Transaction tx = graphDb.beginTx();
-		Node node = value.accept(graphDbValueVisitor);
+		Node node = value.accept(graphDbValueInsertionVisitor);
 		node.setProperty("id", id);
+		nodeIndex.add(node, "id", id);
 		tx.success();
 		tx.finish();		
 	}
 
 	@Override
-	public <T> T read(String id, T value) {
-		return null;		
+	public <T> T read(String id, T value) throws GraphDbMappingException {
+		Node node = nodeIndex.get("id", id).getSingle();
+		IValue retrievedValue = ((IValue)value).accept(new GraphDbValueRetrievalVisitor(node));
+		return (T)retrievedValue;
 	}
 
 }

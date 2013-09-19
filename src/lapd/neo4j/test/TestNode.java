@@ -15,7 +15,7 @@ public class TestNode extends BaseGraphDbTest {
 	public void testInsertNullaryNode() {
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.node("").accept(graphDbValueVisitor);
+			valueFactory.node("").accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch (Exception e) {
@@ -31,7 +31,7 @@ public class TestNode extends BaseGraphDbTest {
 	public void testInsertNode() {
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.node("someNode", createAnnotations(), createChildren()).accept(graphDbValueVisitor);
+			valueFactory.node("someNode", createAnnotations(), createChildren()).accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch (Exception e) {

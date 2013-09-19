@@ -2,7 +2,7 @@ package lapd.neo4j.test;
 
 import java.util.Iterator;
 
-import lapd.neo4j.GraphDbValueVisitor;
+import lapd.neo4j.GraphDbValueInsertionVisitor;
 
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.impl.reference.ValueFactory;
@@ -17,14 +17,14 @@ public class BaseGraphDbTest {
 	
 	protected IValueFactory valueFactory;
 	protected GraphDatabaseService graphDb;	
-	protected GraphDbValueVisitor graphDbValueVisitor;
+	protected GraphDbValueInsertionVisitor graphDbValueInsertionVisitor;
 	protected GlobalGraphOperations globalGraphOperations;
 
 	@Before
 	public void setUp() {
 		valueFactory = ValueFactory.getInstance();
 	    graphDb = new TestGraphDatabaseFactory().newImpermanentDatabase();	    
-	    graphDbValueVisitor = new GraphDbValueVisitor(graphDb);
+	    graphDbValueInsertionVisitor = new GraphDbValueInsertionVisitor(graphDb);
 	    globalGraphOperations = GlobalGraphOperations.at(graphDb);
 	}
 	
