@@ -6,6 +6,7 @@ import java.util.Properties;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
@@ -42,7 +43,8 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 	@Override
 	public void write(String id, IValue value) throws GraphDbMappingException {
 		Transaction tx = graphDb.beginTx();
-		value.accept(graphDbValueVisitor);
+		Node node = value.accept(graphDbValueVisitor);
+		node.setProperty("id", id);
 		tx.success();
 		tx.finish();		
 	}
