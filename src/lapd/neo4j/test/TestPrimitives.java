@@ -1,8 +1,11 @@
 package lapd.neo4j.test;
 
 import static org.junit.Assert.*;
+import lapd.neo4j.GraphDbMappingException;
+import lapd.neo4j.GraphDbValueRetrievalVisitor;
 
 import org.eclipse.imp.pdb.facts.ISourceLocation;
+import org.eclipse.imp.pdb.facts.IValue;
 import org.junit.Test;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -10,11 +13,11 @@ import org.neo4j.graphdb.Transaction;
 public class TestPrimitives extends BaseGraphDbTest {
 	
 	@Test
-	public void testInsertInteger() {
-		final Integer intUnderTest = 13;
+	public void testInteger() throws GraphDbMappingException {
+		IValue integerValue = valueFactory.integer(13);
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.integer(intUnderTest).accept(graphDbValueInsertionVisitor);
+			integerValue.accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch (Exception e) {
@@ -25,16 +28,16 @@ public class TestPrimitives extends BaseGraphDbTest {
 		}	
 		for (Node node : globalGraphOperations.getAllNodes()) {
 			if (node.getId() != 0)
-				assertEquals(intUnderTest.toString(), node.getProperty("int"));
+				assertEquals(integerValue, integerValue.accept(new GraphDbValueRetrievalVisitor(node)));
 		}
 	}
 	
 	@Test
-	public void testInsertString() {
-		String stringUndertest = "testing this stuff";
+	public void testString() throws GraphDbMappingException {
+		IValue stringValue = valueFactory.string("testing this stuff");
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.string(stringUndertest).accept(graphDbValueInsertionVisitor);
+			stringValue.accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {
@@ -45,36 +48,16 @@ public class TestPrimitives extends BaseGraphDbTest {
 		}
 		for (Node node : globalGraphOperations.getAllNodes()) {
 			if (node.getId() != 0)
-				assertEquals(stringUndertest, node.getProperty("str"));		
+				assertEquals(stringValue, stringValue.accept(new GraphDbValueRetrievalVisitor(node)));		
 		}
 	}
 	
 	@Test
-	public void testInsertBoolean() {
-		boolean boolUndertest = true;
+	public void testBoolean() throws GraphDbMappingException {
+		IValue boolValue = valueFactory.bool(true);
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.bool(boolUndertest).accept(graphDbValueInsertionVisitor);
-			tx.success();
-		}
-		catch(Exception e) {
-			fail(e.getMessage());
-		}
-		finally {
-		    tx.finish();
-		}		
-		for (Node node : globalGraphOperations.getAllNodes()) {
-			if (node.getId() != 0)
-				assertEquals(boolUndertest, node.getProperty("bool"));		
-		}
-	}
-	
-	@Test
-	public void testInsertReal() {
-		Double realUndertest = 4.489689023;
-		Transaction tx = graphDb.beginTx();
-		try {
-			valueFactory.real(realUndertest).accept(graphDbValueInsertionVisitor);
+			boolValue.accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {
@@ -85,17 +68,38 @@ public class TestPrimitives extends BaseGraphDbTest {
 		}		
 		for (Node node : globalGraphOperations.getAllNodes()) {
 			if (node.getId() != 0)
-				assertEquals(realUndertest.toString(), node.getProperty("real"));		
+				assertEquals(boolValue, boolValue.accept(new GraphDbValueRetrievalVisitor(node)));		
 		}
 	}
 	
 	@Test
-	public void testInsertRational() {
+	public void testReal() throws GraphDbMappingException {
+		IValue realValue = valueFactory.real(4.489689023);
+		Transaction tx = graphDb.beginTx();
+		try {
+			realValue.accept(graphDbValueInsertionVisitor);
+			tx.success();
+		}
+		catch(Exception e) {
+			fail(e.getMessage());
+		}
+		finally {
+		    tx.finish();
+		}		
+		for (Node node : globalGraphOperations.getAllNodes()) {
+			if (node.getId() != 0)
+				assertEquals(realValue, realValue.accept(new GraphDbValueRetrievalVisitor(node)));		
+		}
+	}
+	
+	@Test
+	public void testRational() throws GraphDbMappingException {
 		Integer numerator = 7;
 		Integer denominator = 3;
+		IValue rationalValue = valueFactory.rational(numerator, denominator);
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.rational(numerator, denominator).accept(graphDbValueInsertionVisitor);
+			rationalValue.accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {
@@ -105,19 +109,18 @@ public class TestPrimitives extends BaseGraphDbTest {
 		    tx.finish();
 		}
 		for (Node node : globalGraphOperations.getAllNodes()) {
-			if (node.getId() != 0) {
-				assertEquals(numerator.toString(), node.getProperty("numerator"));
-				assertEquals(denominator.toString(), node.getProperty("denominator"));
-			}			
+			if (node.getId() != 0)
+				assertEquals(rationalValue, rationalValue.accept(new GraphDbValueRetrievalVisitor(node)));			
 		}
 	}
 	
 	@Test
-	public void testInsertDateTime() {
+	public void testInsertDateTime() throws GraphDbMappingException {
 		long dateTimeUnderTest = System.currentTimeMillis();
+		IValue dateTimeValue = valueFactory.datetime(dateTimeUnderTest);
 		Transaction tx = graphDb.beginTx();
 		try {
-			valueFactory.datetime(dateTimeUnderTest).accept(graphDbValueInsertionVisitor);
+			dateTimeValue.accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {
@@ -127,21 +130,20 @@ public class TestPrimitives extends BaseGraphDbTest {
 		    tx.finish();
 		}
 		// the time deviates by one hour, not sure why
-		long deviatedDateTime = dateTimeUnderTest + 3600000;		
+		IValue deviatedDateTimeValue = valueFactory.datetime(dateTimeUnderTest + 3600000);
 		for (Node node : globalGraphOperations.getAllNodes()) {
 			if (node.getId() != 0)
-				assertEquals(deviatedDateTime, node.getProperty("datetime"));		
+				assertEquals(deviatedDateTimeValue, dateTimeValue.accept(new GraphDbValueRetrievalVisitor(node)));		
 		}
 	}
 	
 	@Test
-	public void testInsertSourceLocation() {
+	public void testInsertSourceLocation() throws GraphDbMappingException {
 		String path = "C:\\Databases\\Neo4J\\graph.db";
-		ISourceLocation loc = valueFactory.sourceLocation(path);
-		String serializedPath = loc.toString();
+		ISourceLocation locValue = valueFactory.sourceLocation(path);
 		Transaction tx = graphDb.beginTx();
 		try {
-			loc.accept(graphDbValueInsertionVisitor);
+			locValue.accept(graphDbValueInsertionVisitor);
 			tx.success();
 		}
 		catch(Exception e) {
@@ -152,7 +154,7 @@ public class TestPrimitives extends BaseGraphDbTest {
 		}
 		for (Node node : globalGraphOperations.getAllNodes()) {
 			if (node.getId() != 0)
-				assertEquals(serializedPath, node.getProperty("loc"));
+				assertEquals(locValue, locValue.accept(new GraphDbValueRetrievalVisitor(node)));
 		}
 	}
 

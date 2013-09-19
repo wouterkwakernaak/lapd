@@ -1,5 +1,7 @@
 package lapd.neo4j;
 
+import java.io.StringReader;
+
 import org.eclipse.imp.pdb.facts.IBool;
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IDateTime;
@@ -17,6 +19,9 @@ import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
+import org.eclipse.imp.pdb.facts.io.IValueTextReader;
+import org.eclipse.imp.pdb.facts.io.StandardTextReader;
+import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.neo4j.graphdb.Node;
 
@@ -59,7 +64,14 @@ public class GraphDbValueRetrievalVisitor implements IValueVisitor<IValue, Graph
 	
 	@Override
 	public IValue visitSourceLocation(ISourceLocation sourceLocationValue) throws GraphDbMappingException {
-		return valueFactory.sourceLocation(node.getProperty("loc").toString());
+		String locString = node.getProperty("loc").toString();
+		IValueTextReader reader = new StandardTextReader();
+		try {
+			return reader.read(valueFactory, TypeFactory.getInstance().sourceLocationType(), 
+					new StringReader(locString));
+		} catch (Exception e) {
+			throw new GraphDbMappingException(e.getMessage());
+		}
 	}
 	
 	@Override
