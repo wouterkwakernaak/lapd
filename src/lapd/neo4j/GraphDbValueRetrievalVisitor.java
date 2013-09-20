@@ -1,6 +1,7 @@
 package lapd.neo4j;
 
 import java.io.StringReader;
+import java.util.Iterator;
 
 import org.eclipse.imp.pdb.facts.IBool;
 import org.eclipse.imp.pdb.facts.IConstructor;
@@ -37,34 +38,34 @@ public class GraphDbValueRetrievalVisitor implements IValueVisitor<IValue, Graph
 
 	@Override
 	public IValue visitString(IString stringValue) throws GraphDbMappingException {
-		return valueFactory.string(node.getProperty("str").toString());
+		return valueFactory.string(node.getProperty(ValueNames.STRING).toString());
 	}
 	
 	@Override
 	public IValue visitInteger(IInteger integerValue) throws GraphDbMappingException {
-		return valueFactory.integer(node.getProperty("int").toString());
+		return valueFactory.integer(node.getProperty(ValueNames.INTEGER).toString());
 	}
 
 	@Override
 	public IValue visitReal(IReal realValue) throws GraphDbMappingException {
-		return valueFactory.real(node.getProperty("real").toString());
+		return valueFactory.real(node.getProperty(ValueNames.REAL).toString());
 	}
 	
 	@Override
 	public IValue visitBoolean(IBool boolValue) throws GraphDbMappingException {
-		return valueFactory.bool((Boolean)node.getProperty("bool"));
+		return valueFactory.bool((Boolean)node.getProperty(ValueNames.BOOLEAN));
 	}
 
 	@Override
 	public IValue visitRational(IRational rationalValue) throws GraphDbMappingException {
-		String numerator = node.getProperty("numerator").toString();
-		String denominator = node.getProperty("denominator").toString();
+		String numerator = node.getProperty(ValueNames.NUMERATOR).toString();
+		String denominator = node.getProperty(ValueNames.DENOMINATOR).toString();
 		return valueFactory.rational(numerator + "r" + denominator);
 	}
 	
 	@Override
 	public IValue visitSourceLocation(ISourceLocation sourceLocationValue) throws GraphDbMappingException {
-		String locString = node.getProperty("loc").toString();
+		String locString = node.getProperty(ValueNames.SOURCE_LOCATION).toString();
 		IValueTextReader reader = new StandardTextReader();
 		try {
 			return reader.read(valueFactory, TypeFactory.getInstance().sourceLocationType(), 
@@ -75,53 +76,58 @@ public class GraphDbValueRetrievalVisitor implements IValueVisitor<IValue, Graph
 	}
 	
 	@Override
-	public IValue visitDateTime(IDateTime dateTime) throws GraphDbMappingException {
-		return valueFactory.datetime((Long)node.getProperty("datetime"));
+	public IValue visitDateTime(IDateTime dateTimeValue) throws GraphDbMappingException {
+		return valueFactory.datetime((Long)node.getProperty(ValueNames.DATE_TIME));
 	}
 
 	@Override
-	public IValue visitList(IList o) throws GraphDbMappingException {
+	public IValue visitList(IList listValue) throws GraphDbMappingException {
+		Iterator<String> propertyKeys = node.getPropertyKeys().iterator();
+		if (!propertyKeys.hasNext())	// empty list
+			return valueFactory.list(TypeFactory.getInstance().voidType());
 		return null;
 	}
 	
 	@Override
-	public IValue visitListRelation(IList o) throws GraphDbMappingException {
+	public IValue visitListRelation(IList listValue) throws GraphDbMappingException {
+		Iterator<String> propertyKeys = node.getPropertyKeys().iterator();
+		if (!propertyKeys.hasNext())	// empty list
+			return valueFactory.list(TypeFactory.getInstance().voidType());
+		return null;
+	}
+	
+	@Override
+	public IValue visitSet(ISet setValue) throws GraphDbMappingException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IValue visitRelation(ISet setValue) throws GraphDbMappingException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
 	@Override
-	public IValue visitSet(ISet o) throws GraphDbMappingException {
+	public IValue visitNode(INode nodeValue) throws GraphDbMappingException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public IValue visitRelation(ISet o) throws GraphDbMappingException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	@Override
-	public IValue visitNode(INode o) throws GraphDbMappingException {
+	public IValue visitConstructor(IConstructor constructorValue) throws GraphDbMappingException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public IValue visitConstructor(IConstructor o) throws GraphDbMappingException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public IValue visitTuple(ITuple o) throws GraphDbMappingException {
+	public IValue visitTuple(ITuple tupleValue) throws GraphDbMappingException {
 		// TODO Auto-generated method stub
 		return null;
 	}	
 
 	@Override
-	public IValue visitMap(IMap o) throws GraphDbMappingException {
+	public IValue visitMap(IMap mapValue) throws GraphDbMappingException {
 		// TODO Auto-generated method stub
 		return null;
 	}
