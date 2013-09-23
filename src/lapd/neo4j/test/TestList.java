@@ -2,105 +2,42 @@ package lapd.neo4j.test;
 
 import static org.junit.Assert.*;
 import lapd.neo4j.GraphDbMappingException;
-import lapd.neo4j.GraphDbValueRetrievalVisitor;
-import lapd.neo4j.ValueNames;
-
 import org.eclipse.imp.pdb.facts.IBool;
 import org.eclipse.imp.pdb.facts.IList;
 import org.eclipse.imp.pdb.facts.IListWriter;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.junit.Test;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
-import org.neo4j.tooling.GlobalGraphOperations;
 
 public class TestList extends BaseGraphDbTest {
 
 	@Test
-	public void testInsertBooleanList() {
+	public void testBooleanList() throws GraphDbMappingException {
 		IList booleanList = createBooleanList();
-		Transaction tx = graphDb.beginTx();
-		try {
-			booleanList.accept(graphDbValueInsertionVisitor);
-			tx.success();
-		}
-		catch(Exception e) {
-			fail(e.getMessage());
-		}
-		finally {
-		    tx.finish();
-		}
-		GlobalGraphOperations op = GlobalGraphOperations.at(graphDb);
-		int i = 0;
-		for (Node node : op.getAllNodes()) {
-			if (node.getId() != 0) {
-				assertEquals(booleanList.get(i).toString(), node.getProperty(ValueNames.BOOLEAN).toString());
-				i++;
-			}			
-		}
+		graphDbValueIO.write(id, booleanList);
+		assertEquals(booleanList, graphDbValueIO.read(id, booleanList));
 	}
 	
 	@Test
 	public void testEmptyList() throws GraphDbMappingException {
 		IList emptyList = valueFactory.list(TypeFactory.getInstance().voidType());
-		Transaction tx = graphDb.beginTx();
-		try {
-			emptyList.accept(graphDbValueInsertionVisitor);
-			tx.success();
-		}
-		catch(Exception e) {
-			fail(e.getMessage());
-		}
-		finally {
-		    tx.finish();
-		}
-		for (Node node : globalGraphOperations.getAllNodes()) {
-			if (node.getId() != 0)
-				assertEquals(emptyList, emptyList.accept(new GraphDbValueRetrievalVisitor(node)));		
-		}
+		graphDbValueIO.write(id, emptyList);
+		assertEquals(emptyList, graphDbValueIO.read(id, emptyList));
 	}
 	
 	@Test
-	public void testInsertIntegerList() {
+	public void testIntegerList() throws GraphDbMappingException {
 		IList integerList = createIntegerList();
-		Transaction tx = graphDb.beginTx();
-		try {
-			integerList.accept(graphDbValueInsertionVisitor);
-			tx.success();
-		}
-		catch(Exception e) {
-			fail(e.getMessage());
-		}
-		finally {
-		    tx.finish();
-		}
-		GlobalGraphOperations op = GlobalGraphOperations.at(graphDb);
-		int i = 0;
-		for (Node node : op.getAllNodes()) {
-			if (node.getId() != 0) {
-				assertEquals(integerList.get(i).toString(), node.getProperty(ValueNames.INTEGER).toString());
-				i++;
-			}
-		}
+		graphDbValueIO.write(id, integerList);
+		assertEquals(integerList, graphDbValueIO.read(id, integerList));
 	}
 	
 	@Test
-	public void testInsertListOfLists() {
+	public void testInsertListOfLists() throws GraphDbMappingException {
 		IList integerList1 = createIntegerList();
 		IList integerList2 = createIntegerList();
 		IList listOfLists = valueFactory.list(integerList1, integerList2);
-		Transaction tx = graphDb.beginTx();
-		try {
-			listOfLists.accept(graphDbValueInsertionVisitor);
-			tx.success();
-		}
-		catch(Exception e) {
-			fail(e.getMessage());
-		}
-		finally {
-		    tx.finish();
-		}
-		assertEquals(41, countNodes());
+		graphDbValueIO.write(id, listOfLists);
+		assertTrue(listOfLists.isEqual(graphDbValueIO.read(id, listOfLists)));
 	}
 
 	private IList createBooleanList() {

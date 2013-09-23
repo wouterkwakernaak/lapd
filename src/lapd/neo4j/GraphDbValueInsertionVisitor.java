@@ -75,9 +75,26 @@ public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.v
 
 	@Override
 	public Node visitList(IList listValue) throws GraphDbMappingException {
-		Node firstElementNode = createIterableNodeCollection(listValue.iterator(), RelTypes.NEXT_LIST_ELEMENT);		
+		Node firstElementNode = createIterableNodeCollection1(listValue.iterator(), RelTypes.NEXT_LIST_ELEMENT);		
 		return firstElementNode;
-	}	
+	}
+	
+	private Node createIterableNodeCollection1(Iterator<IValue> iterator, RelTypes relType) throws GraphDbMappingException {
+		Node referenceNode = graphDb.createNode();
+		Node previousElementNode = null;
+		if (iterator.hasNext()) {
+			IValue elementValue = iterator.next();
+			previousElementNode = elementValue.accept(this);
+			referenceNode.createRelationshipTo(previousElementNode, RelTypes.LIST_HEAD);
+			while (iterator.hasNext()) {
+				IValue currentElementValue = iterator.next();
+				Node currentElementNode = currentElementValue.accept(this);
+				previousElementNode.createRelationshipTo(currentElementNode, relType);
+				previousElementNode = currentElementNode;
+			}
+		}
+		return referenceNode;
+	}
 	
 	@Override
 	public Node visitListRelation(IList listValue) throws GraphDbMappingException {		

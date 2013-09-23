@@ -2,6 +2,8 @@ package lapd.neo4j.test;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.type.TypeStore;
@@ -15,7 +17,7 @@ public class TestConstructor extends BaseGraphDbTest {
 	private TypeFactory typeFactory;;
 
 	@Before
-	public void setUp() {
+	public void setUp() throws IOException {
 		super.setUp();
 		typeStore = new TypeStore();
 		typeFactory = TypeFactory.getInstance();

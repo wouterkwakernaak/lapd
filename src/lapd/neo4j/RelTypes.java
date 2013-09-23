@@ -5,6 +5,7 @@ import org.neo4j.graphdb.RelationshipType;
 public enum RelTypes implements RelationshipType
 {
     NEXT_LIST_ELEMENT,
+    LIST_HEAD,
     NEXT_TUPLE_ELEMENT,
     NEXT_SET_ELEMENT,
     NEXT_RELATION_ELEMENT,

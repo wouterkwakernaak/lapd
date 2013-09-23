@@ -2,6 +2,7 @@ package lapd.neo4j.test;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 import org.eclipse.imp.pdb.facts.IValue;
@@ -21,7 +22,7 @@ public class TestTuple extends BaseGraphDbTest {
 	private ExecutionEngine engine;
 
 	@Before
-	public void setUp() {
+	public void setUp() throws IOException {
 		super.setUp();
 		typeFactory = TypeFactory.getInstance();
 	    engine = new ExecutionEngine(graphDb);
