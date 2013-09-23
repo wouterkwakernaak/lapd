@@ -9,7 +9,7 @@ import lapd.neo4j.GraphDbValueInsertionVisitor;
 import lapd.neo4j.IGraphDbValueIO;
 
 import org.eclipse.imp.pdb.facts.IValueFactory;
-import org.eclipse.imp.pdb.facts.impl.reference.ValueFactory;
+import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.neo4j.graphdb.GraphDatabaseService;

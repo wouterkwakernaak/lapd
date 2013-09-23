@@ -17,7 +17,6 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
-import org.eclipse.imp.pdb.facts.type.Type;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
@@ -106,22 +105,7 @@ public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.v
 
 	@Override
 	public Node visitTuple(ITuple tupleValue) throws GraphDbMappingException {
-		Iterator<IValue> iterator = tupleValue.iterator();
-		Node firstElementNode = null;
-		Node previousElementNode = null;
-		if (iterator.hasNext()) {			
-			IValue elementValue = iterator.next();
-			firstElementNode = elementValue.accept(this);
-			previousElementNode = firstElementNode;
-			while (iterator.hasNext()) {
-				IValue currentElementValue = iterator.next();
-				Node currentElementNode = currentElementValue.accept(this);
-				previousElementNode.createRelationshipTo(currentElementNode, RelTypes.NEXT_TUPLE_ELEMENT);
-				previousElementNode = currentElementNode;
-			}
-		}
-		else	// empty tuple
-			firstElementNode = graphDb.createNode();
+		Node firstElementNode = createIterableNodeCollection(tupleValue.iterator(), RelTypes.NEXT_TUPLE_ELEMENT, RelTypes.TUPLE_HEAD);		
 		return firstElementNode;
 	}		
 
