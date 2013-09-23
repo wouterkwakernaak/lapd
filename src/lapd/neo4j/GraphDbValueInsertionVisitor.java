@@ -107,27 +107,17 @@ public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.v
 	@Override
 	public Node visitTuple(ITuple tupleValue) throws GraphDbMappingException {
 		Iterator<IValue> iterator = tupleValue.iterator();
-		Type type = tupleValue.getType();
-		boolean hasLabels = type.hasFieldNames();
 		Node firstElementNode = null;
 		Node previousElementNode = null;
-		int count = 0;
 		if (iterator.hasNext()) {			
 			IValue elementValue = iterator.next();
 			firstElementNode = elementValue.accept(this);
-			if (hasLabels) {
-				firstElementNode.setProperty(ValueNames.LABEL, type.getFieldName(count));
-				count++;
-			}
 			previousElementNode = firstElementNode;
 			while (iterator.hasNext()) {
 				IValue currentElementValue = iterator.next();
 				Node currentElementNode = currentElementValue.accept(this);
-				if (hasLabels)
-					currentElementNode.setProperty(ValueNames.LABEL, type.getFieldName(count));
 				previousElementNode.createRelationshipTo(currentElementNode, RelTypes.NEXT_TUPLE_ELEMENT);
 				previousElementNode = currentElementNode;
-				count++;
 			}
 		}
 		else	// empty tuple
