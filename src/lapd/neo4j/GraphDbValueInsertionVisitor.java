@@ -75,43 +75,22 @@ public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.v
 
 	@Override
 	public Node visitList(IList listValue) throws GraphDbMappingException {
-		Node firstElementNode = createIterableNodeCollection1(listValue.iterator(), RelTypes.NEXT_LIST_ELEMENT);		
-		return firstElementNode;
-	}
-	
-	private Node createIterableNodeCollection1(Iterator<IValue> iterator, RelTypes relType) throws GraphDbMappingException {
-		Node referenceNode = graphDb.createNode();
-		Node previousElementNode = null;
-		if (iterator.hasNext()) {
-			IValue elementValue = iterator.next();
-			previousElementNode = elementValue.accept(this);
-			referenceNode.createRelationshipTo(previousElementNode, RelTypes.LIST_HEAD);
-			while (iterator.hasNext()) {
-				IValue currentElementValue = iterator.next();
-				Node currentElementNode = currentElementValue.accept(this);
-				previousElementNode.createRelationshipTo(currentElementNode, relType);
-				previousElementNode = currentElementNode;
-			}
-		}
-		return referenceNode;
-	}
+		return insertList(listValue);
+	}	
 	
 	@Override
 	public Node visitListRelation(IList listValue) throws GraphDbMappingException {		
-		Node firstElementNode = createIterableNodeCollection(listValue.iterator(), RelTypes.NEXT_LIST_RELATION_ELEMENT);		
-		return firstElementNode;
+		return insertList(listValue);
 	}
 	
 	@Override
 	public Node visitSet(ISet setValue) throws GraphDbMappingException {	
-		Node firstElementNode = createIterableNodeCollection(setValue.iterator(), RelTypes.NEXT_SET_ELEMENT);		
-		return firstElementNode;
+		return insertSet(setValue);
 	}	
 
 	@Override
 	public Node visitRelation(ISet setValue) throws GraphDbMappingException {		
-		Node firstElementNode = createIterableNodeCollection(setValue.iterator(), RelTypes.NEXT_RELATION_ELEMENT);		
-		return firstElementNode;
+		return insertSet(setValue);
 	}
 	
 	@Override
@@ -181,7 +160,17 @@ public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.v
 	@Override
 	public Node visitExternal(IExternalValue externalValue)	throws GraphDbMappingException {
 		throw new GraphDbMappingException("External values not supported.");
-	}	
+	}
+	
+	private Node insertList(IList listValue) throws GraphDbMappingException {
+		Node firstElementNode = createIterableNodeCollection(listValue.iterator(), RelTypes.NEXT_LIST_ELEMENT, RelTypes.LIST_HEAD);		
+		return firstElementNode;
+	}
+	
+	private Node insertSet(ISet setValue) throws GraphDbMappingException {
+		Node firstElementNode = createIterableNodeCollection(setValue.iterator(), RelTypes.NEXT_SET_ELEMENT, RelTypes.SET_HEAD);		
+		return firstElementNode;
+	}
 
 	private void addValueToMap(Node keyNode, IValue value) throws GraphDbMappingException {
 		Node valueNode = value.accept(this);
@@ -194,22 +183,22 @@ public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.v
 		return node;
 	}
 	
-	private Node createIterableNodeCollection(Iterator<IValue> iterator, RelTypes relType) throws GraphDbMappingException {
-		Node firstElementNode = null;
+	private Node createIterableNodeCollection(Iterator<IValue> iterator, 
+			RelTypes elementRelation, RelTypes headRelation) throws GraphDbMappingException {
+		Node referenceNode = graphDb.createNode();
 		Node previousElementNode = null;
 		if (iterator.hasNext()) {
 			IValue elementValue = iterator.next();
-			firstElementNode = previousElementNode = elementValue.accept(this);
+			previousElementNode = elementValue.accept(this);
+			referenceNode.createRelationshipTo(previousElementNode, headRelation);
 			while (iterator.hasNext()) {
 				IValue currentElementValue = iterator.next();
 				Node currentElementNode = currentElementValue.accept(this);
-				previousElementNode.createRelationshipTo(currentElementNode, relType);
+				previousElementNode.createRelationshipTo(currentElementNode, elementRelation);
 				previousElementNode = currentElementNode;
 			}
-		}		
-		else	// empty node
-			firstElementNode = graphDb.createNode();
-		return firstElementNode;
+		}
+		return referenceNode;
 	}
 	
 	private Node createAnnotatableNode(INode nodeValue, String propertyName, 

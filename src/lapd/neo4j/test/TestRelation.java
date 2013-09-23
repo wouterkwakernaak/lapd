@@ -23,7 +23,7 @@ public class TestRelation extends BaseGraphDbTest {
 		finally {
 			tx.finish();
 		}
-		assertEquals(5, countNodes());
+		assertEquals(6, countNodes());
 	}
 
 }

@@ -85,8 +85,16 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 	
 	@Override
 	public IValue visitSet(Type type) throws GraphDbMappingException {
-		// TODO Auto-generated method stub
-		return null;
+		if (!node.hasRelationship(RelTypes.SET_HEAD))
+			return valueFactory.set(TypeFactory.getInstance().voidType());
+		List<IValue> valueList = new ArrayList<IValue>();
+		Node currentNode = node.getSingleRelationship(RelTypes.SET_HEAD, Direction.OUTGOING).getEndNode();
+		valueList.add(type.getElementType().accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_SET_ELEMENT)) {
+			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_SET_ELEMENT, Direction.OUTGOING).getEndNode();
+			valueList.add(type.getElementType().accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+		}
+		return valueFactory.set(valueList.toArray(new IValue[valueList.size()]));
 	}
 	
 	@Override
