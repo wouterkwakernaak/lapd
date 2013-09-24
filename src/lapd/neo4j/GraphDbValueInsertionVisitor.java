@@ -111,24 +111,23 @@ public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.v
 
 	@Override
 	public Node visitMap(IMap mapValue) throws GraphDbMappingException {
-		Iterator<Entry<IValue, IValue>> iterator = mapValue.entryIterator();		
-		Node firstElementNode = null;
+		Iterator<Entry<IValue, IValue>> iterator = mapValue.entryIterator();	
+		Node referenceNode = graphDb.createNode();
 		Node previousElementNode = null;
-		if (iterator.hasNext()) {
+		if (iterator.hasNext()) {			
 			Entry<IValue, IValue> entry = iterator.next();			
-			firstElementNode = previousElementNode = entry.getKey().accept(this);
-			addValueToMap(firstElementNode, entry.getValue());
+			previousElementNode = entry.getKey().accept(this);
+			referenceNode.createRelationshipTo(previousElementNode, RelTypes.MAP_HEAD);
+			addValueToMap(previousElementNode, entry.getValue());
 			while (iterator.hasNext()) {
-				Entry<IValue, IValue> currentEntry = iterator.next();
-				Node currentElementNode = currentEntry.getKey().accept(this);
+				entry = iterator.next();
+				Node currentElementNode = entry.getKey().accept(this);
 				addValueToMap(currentElementNode, entry.getValue());
 				previousElementNode.createRelationshipTo(currentElementNode, RelTypes.NEXT_MAP_ELEMENT);
 				previousElementNode = currentElementNode;
 			}
-		}		
-		else	// empty map
-			firstElementNode = graphDb.createNode();		
-		return firstElementNode;
+		}	
+		return referenceNode;
 	}
 	
 	@Override

@@ -11,6 +11,7 @@ public enum RelTypes implements RelationshipType
     NEXT_SET_ELEMENT,
     SET_HEAD,
     NEXT_MAP_ELEMENT,
+    MAP_HEAD,
     IS_MAP_VALUE,
     CHILD_NODE,
     ANNOTATION_NODE,

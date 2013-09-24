@@ -4,6 +4,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.imp.pdb.facts.IMapWriter;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
@@ -127,8 +128,20 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 
 	@Override
 	public IValue visitMap(Type type) throws GraphDbMappingException {
-		// TODO Auto-generated method stub
-		return null;
+		IMapWriter mapWriter = valueFactory.mapWriter();
+		if (!node.hasRelationship(RelTypes.MAP_HEAD))		
+			return mapWriter.done();
+		Node currentKeyNode = node.getSingleRelationship(RelTypes.MAP_HEAD, Direction.OUTGOING).getEndNode();
+		Node currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.IS_MAP_VALUE, Direction.OUTGOING).getEndNode();
+		mapWriter.put(type.getKeyType().accept(new GraphDbTypeRetrievalVisitor(currentKeyNode)),
+				type.getValueType().accept(new GraphDbTypeRetrievalVisitor(currentValueNode)));
+		while (currentKeyNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_MAP_ELEMENT)) {
+			currentKeyNode = currentKeyNode.getSingleRelationship(RelTypes.NEXT_MAP_ELEMENT, Direction.OUTGOING).getEndNode();
+			currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.IS_MAP_VALUE, Direction.OUTGOING).getEndNode();
+			mapWriter.put(type.getKeyType().accept(new GraphDbTypeRetrievalVisitor(currentKeyNode)),
+					type.getValueType().accept(new GraphDbTypeRetrievalVisitor(currentValueNode)));
+		}
+		return mapWriter.done();
 	}
 	
 	@Override
