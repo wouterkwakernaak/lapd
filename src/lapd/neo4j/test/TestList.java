@@ -37,7 +37,7 @@ public class TestList extends BaseGraphDbTest {
 		IList integerList2 = createIntegerList();
 		IList listOfLists = valueFactory.list(integerList1, integerList2);
 		graphDbValueIO.write(id, listOfLists);
-		assertTrue(listOfLists.isEqual(graphDbValueIO.read(id, listOfLists)));
+		assertEquals(listOfLists, graphDbValueIO.read(id, listOfLists));
 	}
 
 	private IList createBooleanList() {
