@@ -10,7 +10,7 @@ import org.junit.Test;
 public class TestMap extends BaseGraphDbTest {
 
 	@Test
-	public void testInsertMap() throws GraphDbMappingException {
+	public void testMap() throws GraphDbMappingException {
 		IMapWriter mapWriter = valueFactory.mapWriter();
 		mapWriter.put(valueFactory.integer(1), valueFactory.string("one"));
 		mapWriter.put(valueFactory.integer(2), valueFactory.string("two"));

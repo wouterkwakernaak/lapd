@@ -32,7 +32,7 @@ public class TestList extends BaseGraphDbTest {
 	}
 	
 	@Test
-	public void testInsertListOfLists() throws GraphDbMappingException {
+	public void testListOfLists() throws GraphDbMappingException {
 		IList integerList1 = createIntegerList();
 		IList integerList2 = createIntegerList();
 		IList listOfLists = valueFactory.list(integerList1, integerList2);
