@@ -5,42 +5,32 @@ import static org.junit.Assert.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import lapd.neo4j.GraphDbMappingException;
+
 import org.eclipse.imp.pdb.facts.IValue;
 import org.junit.Test;
-import org.neo4j.graphdb.Transaction;
 
 public class TestNode extends BaseGraphDbTest {
 
 	@Test
-	public void testInsertNullaryNode() {
-		Transaction tx = graphDb.beginTx();
-		try {
-			valueFactory.node("").accept(graphDbValueInsertionVisitor);
-			tx.success();
-		}
-		catch (Exception e) {
-			fail(e.getMessage());
-		}
-		finally {
-			tx.finish();
-		}
-		assertEquals(2, countNodes());
+	public void testNullaryNode() throws GraphDbMappingException {
+		IValue nodeValue = valueFactory.node("");
+		graphDbValueIO.write(id, nodeValue);
+		assertEquals(nodeValue, graphDbValueIO.read(id, nodeValue));
 	}
 	
 	@Test
-	public void testInsertNode() {
-		Transaction tx = graphDb.beginTx();
-		try {
-			valueFactory.node("someNode", createAnnotations(), createChildren()).accept(graphDbValueInsertionVisitor);
-			tx.success();
-		}
-		catch (Exception e) {
-			fail(e.getMessage());
-		}
-		finally {
-			tx.finish();
-		}
-		assertEquals(8, countNodes());
+	public void testNode() throws GraphDbMappingException {
+		IValue nodeValue = valueFactory.node("someNode", createChildren());
+		graphDbValueIO.write(id, nodeValue);
+		assertEquals(nodeValue, graphDbValueIO.read(id, nodeValue));
+	}
+	
+	@Test
+	public void testNodeWithAnnotations() throws GraphDbMappingException {
+		IValue nodeValue = valueFactory.node("someNode", createAnnotations(), createChildren());
+		graphDbValueIO.write(id, nodeValue);
+		assertEquals(nodeValue, graphDbValueIO.read(id, nodeValue));
 	}
 
 	private Map<String, IValue> createAnnotations() {
@@ -51,10 +41,9 @@ public class TestNode extends BaseGraphDbTest {
 	}
 
 	private IValue[] createChildren() {
-		IValue[] children = new IValue[3];
+		IValue[] children = new IValue[2];
 		children[0] = valueFactory.node("nodeX", valueFactory.bool(true));
-		children[1] = valueFactory.datetime(System.currentTimeMillis());
-		children[2] = valueFactory.rational(5, 3);
+		children[1] = valueFactory.rational(5, 3);
 		return children;
 	}
 }

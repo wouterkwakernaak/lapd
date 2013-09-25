@@ -1,6 +1,6 @@
 package lapd.neo4j;
 
-public class ValueNames {
+public class PropertyNames {
 	
 	public final static String STRING = "str";
 	public final static String INTEGER = "int";
@@ -13,6 +13,7 @@ public class ValueNames {
 	public final static String NODE = "node";
 	public final static String CONSTRUCTOR = "constructor";
 	public final static String LABEL = "label";
-	public final static String ANNOTATION = "annotation";	
+	public final static String ANNOTATION = "annotation";
+	public final static String TYPE = "type";
 
 }

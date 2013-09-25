@@ -17,10 +17,11 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 
-public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.visitors.IValueVisitor<Node, GraphDbMappingException> {
+public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDbMappingException> {
 
 	private GraphDatabaseService graphDb;
 	
@@ -31,44 +32,48 @@ public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.v
 	@Override
 	public Node visitString(IString stringValue) throws GraphDbMappingException {
 		Node node = graphDb.createNode();
-		node.setProperty(ValueNames.STRING, stringValue.getValue());
+		node.setProperty(PropertyNames.TYPE, TypeNames.STRING);
+		node.setProperty(PropertyNames.STRING, stringValue.getValue());
 		return node;
 	}
 	
 	@Override
 	public Node visitInteger(IInteger integerValue) throws GraphDbMappingException {
-		return createPrimitiveNode(integerValue, ValueNames.INTEGER);
+		return createPrimitiveNode(integerValue, PropertyNames.INTEGER, TypeNames.INTEGER);
 	}
 
 	@Override
 	public Node visitReal(IReal realValue) throws GraphDbMappingException {
-		return createPrimitiveNode(realValue, ValueNames.REAL);
+		return createPrimitiveNode(realValue, PropertyNames.REAL, TypeNames.REAL);
 	}	
 	
 	@Override
 	public Node visitBoolean(IBool booleanValue) throws GraphDbMappingException {
 		Node node = graphDb.createNode();
-		node.setProperty(ValueNames.BOOLEAN, booleanValue.getValue());
+		node.setProperty(PropertyNames.TYPE, TypeNames.BOOLEAN);
+		node.setProperty(PropertyNames.BOOLEAN, booleanValue.getValue());
 		return node;
 	}
 
 	@Override
 	public Node visitRational(IRational rationalValue) throws GraphDbMappingException {
 		Node node = graphDb.createNode();
-		node.setProperty(ValueNames.NUMERATOR, rationalValue.numerator().toString());
-		node.setProperty(ValueNames.DENOMINATOR, rationalValue.denominator().toString());
+		node.setProperty(PropertyNames.TYPE, TypeNames.RATIONAL);
+		node.setProperty(PropertyNames.NUMERATOR, rationalValue.numerator().toString());
+		node.setProperty(PropertyNames.DENOMINATOR, rationalValue.denominator().toString());
 		return node;
 	}
 	
 	@Override
 	public Node visitSourceLocation(ISourceLocation sourceLocationValue) throws GraphDbMappingException {
-		return createPrimitiveNode(sourceLocationValue, ValueNames.SOURCE_LOCATION);
+		return createPrimitiveNode(sourceLocationValue, PropertyNames.SOURCE_LOCATION, TypeNames.SOURCE_LOCATION);
 	}
 	
 	@Override
 	public Node visitDateTime(IDateTime dateTimeValue) throws GraphDbMappingException {
-		Node node = graphDb.createNode();		
-		node.setProperty(ValueNames.DATE_TIME, dateTimeValue.getInstant());
+		Node node = graphDb.createNode();
+		node.setProperty(PropertyNames.TYPE, TypeNames.DATE_TIME);
+		node.setProperty(PropertyNames.DATE_TIME, dateTimeValue.getInstant());
 		return node;
 	}
 
@@ -94,18 +99,22 @@ public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.v
 	
 	@Override
 	public Node visitNode(INode nodeValue) throws GraphDbMappingException {
-		return createAnnotatableNode(nodeValue, ValueNames.NODE, RelTypes.CHILD_NODE, RelTypes.ANNOTATION_NODE);
+		return createAnnotatableNode(nodeValue, PropertyNames.NODE, RelTypes.NEXT_CHILD_NODE, RelTypes.NODE_HEAD,
+				RelTypes.ANNOTATION_NODE, TypeNames.NODE);
 	}	
 
 	@Override
 	public Node visitConstructor(IConstructor constructorValue) throws GraphDbMappingException {
-		return createAnnotatableNode(constructorValue, ValueNames.CONSTRUCTOR, 
-				RelTypes.CHILD_CONSTRUCTOR, RelTypes.ANNOTATION_CONSTRUCTOR);
+		return createAnnotatableNode(constructorValue, PropertyNames.CONSTRUCTOR, 
+				RelTypes.NEXT_CHILD_CONSTRUCTOR, RelTypes.CONSTRUCTOR_HEAD, RelTypes.ANNOTATION_CONSTRUCTOR, 
+				TypeNames.CONSTRUCTOR);
 	}
 
 	@Override
 	public Node visitTuple(ITuple tupleValue) throws GraphDbMappingException {
-		Node firstElementNode = createIterableNodeCollection(tupleValue.iterator(), RelTypes.NEXT_TUPLE_ELEMENT, RelTypes.TUPLE_HEAD);		
+		Node firstElementNode = createIterableNodeCollection(tupleValue.iterator(), RelTypes.NEXT_TUPLE_ELEMENT, 
+				RelTypes.TUPLE_HEAD);	
+		firstElementNode.setProperty(PropertyNames.TYPE, TypeNames.TUPLE);
 		return firstElementNode;
 	}		
 
@@ -136,12 +145,16 @@ public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.v
 	}
 	
 	private Node insertList(IList listValue) throws GraphDbMappingException {
-		Node firstElementNode = createIterableNodeCollection(listValue.iterator(), RelTypes.NEXT_LIST_ELEMENT, RelTypes.LIST_HEAD);		
+		Node firstElementNode = createIterableNodeCollection(listValue.iterator(), RelTypes.NEXT_LIST_ELEMENT, 
+				RelTypes.LIST_HEAD);
+		firstElementNode.setProperty(PropertyNames.TYPE, TypeNames.LIST);
 		return firstElementNode;
 	}
 	
 	private Node insertSet(ISet setValue) throws GraphDbMappingException {
-		Node firstElementNode = createIterableNodeCollection(setValue.iterator(), RelTypes.NEXT_SET_ELEMENT, RelTypes.SET_HEAD);		
+		Node firstElementNode = createIterableNodeCollection(setValue.iterator(), RelTypes.NEXT_SET_ELEMENT, 
+				RelTypes.SET_HEAD);
+		firstElementNode.setProperty(PropertyNames.TYPE, TypeNames.SET);
 		return firstElementNode;
 	}
 
@@ -150,8 +163,9 @@ public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.v
 		keyNode.createRelationshipTo(valueNode, RelTypes.IS_MAP_VALUE);		
 	}	
 	
-	private Node createPrimitiveNode(IValue value, String propertyName) {
+	private Node createPrimitiveNode(IValue value, String propertyName, String typeName) {
 		Node node = graphDb.createNode();
+		node.setProperty(PropertyNames.TYPE, typeName);
 		node.setProperty(propertyName, value.toString());
 		return node;
 	}
@@ -174,19 +188,16 @@ public class GraphDbValueInsertionVisitor implements org.eclipse.imp.pdb.facts.v
 		return referenceNode;
 	}
 	
-	private Node createAnnotatableNode(INode nodeValue, String propertyName, 
-			RelTypes childRelation, RelTypes annotationRelation) throws GraphDbMappingException {
-		Node node = graphDb.createNode();
+	private Node createAnnotatableNode(INode nodeValue, String propertyName, RelTypes childRelation,
+			RelTypes headRelation, RelTypes annotationRelation, String typeName) throws GraphDbMappingException {
+		Node node = createIterableNodeCollection(nodeValue.getChildren().iterator(), childRelation, headRelation);
 		node.setProperty(propertyName, nodeValue.getName());
-		for (IValue child : nodeValue.getChildren() ) {
-			Node childNode = child.accept(this);
-			node.createRelationshipTo(childNode, childRelation);
-		}
 		for (Entry<String, IValue> annotation : nodeValue.asAnnotatable().getAnnotations().entrySet()) {
 			Node annotationNode = annotation.getValue().accept(this);
-			annotationNode.setProperty(ValueNames.ANNOTATION, annotation.getKey());
+			annotationNode.setProperty(PropertyNames.ANNOTATION, annotation.getKey());
 			node.createRelationshipTo(annotationNode, annotationRelation);
 		}
+		node.setProperty(PropertyNames.TYPE, typeName);
 		return node;
 	}
 
