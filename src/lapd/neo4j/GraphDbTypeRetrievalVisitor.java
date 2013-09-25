@@ -126,9 +126,26 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 	}
 	
 	@Override
-	public IValue visitConstructor(Type type) throws GraphDbMappingException {
-		// TODO Auto-generated method stub
-		return null;
+	public IValue visitConstructor(Type type) throws GraphDbMappingException {		
+		if (!node.hasRelationship(Direction.OUTGOING, RelTypes.CONSTRUCTOR_HEAD)) 
+			return valueFactory.constructor(type);		
+		List<IValue> valueList = new ArrayList<IValue>();
+		Node currentNode = node.getSingleRelationship(RelTypes.CONSTRUCTOR_HEAD, Direction.OUTGOING).getEndNode();
+		valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_CHILD_CONSTRUCTOR)) {
+			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_CHILD_CONSTRUCTOR, Direction.OUTGOING).getEndNode();
+			valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+		}
+		if (!node.hasRelationship(Direction.OUTGOING, RelTypes.ANNOTATION_CONSTRUCTOR))
+			return valueFactory.constructor(type, valueList.toArray(new IValue[valueList.size()]));
+		Map<String, IValue> annotations = new HashMap<String, IValue>();
+		for (Relationship rel : node.getRelationships(Direction.OUTGOING, RelTypes.ANNOTATION_CONSTRUCTOR)) {
+			Node annotationNode = rel.getEndNode();
+			String annotationName = annotationNode.getProperty(PropertyNames.ANNOTATION).toString();
+			IValue annotationValue = TypeDeducer.getType(annotationNode).accept(new GraphDbTypeRetrievalVisitor(annotationNode));
+			annotations.put(annotationName, annotationValue);
+		}
+		return valueFactory.constructor(type, annotations, valueList.toArray(new IValue[valueList.size()]));
 	}
 	
 	@Override

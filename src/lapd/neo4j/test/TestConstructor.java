@@ -4,12 +4,14 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
+import lapd.neo4j.GraphDbMappingException;
+
+import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.type.TypeStore;
 import org.junit.Before;
 import org.junit.Test;
-import org.neo4j.graphdb.Transaction;
 
 public class TestConstructor extends BaseGraphDbTest {
 
@@ -24,25 +26,22 @@ public class TestConstructor extends BaseGraphDbTest {
 	}
 
 	@Test
-	public void testConstructor() {
-		Transaction tx = graphDb.beginTx();
-		try {
-			Type adt = typeFactory.abstractDataType(typeStore, "SomeADT");
-			Type constructorX = typeFactory.constructor(typeStore, adt, "someConstructorX");
-			Type constructorY = typeFactory.constructor(typeStore, adt, "someConstructorY", 
-					typeFactory.boolType(), typeFactory.integerType());
-			valueFactory.constructor(constructorX).accept(graphDbValueInsertionVisitor);
-			valueFactory.constructor(constructorY, valueFactory.bool(true), 
-					valueFactory.datetime(System.currentTimeMillis())).accept(graphDbValueInsertionVisitor);
-			tx.success();
-		} 
-		catch (Exception e) {
-			fail(e.getMessage());
-		}
-		finally {
-			tx.finish();
-		}
-		assertEquals(5, countNodes());
+	public void testNullaryConstructor() throws GraphDbMappingException {
+		Type adt = typeFactory.abstractDataType(typeStore, "SomeADT");
+		Type constructorType = typeFactory.constructor(typeStore, adt, "someConstructor");
+		IValue constructorValue = valueFactory.constructor(constructorType);
+		graphDbValueIO.write(id, constructorValue);
+		assertEquals(constructorValue, graphDbValueIO.read(id, constructorValue));
+	}
+	
+	@Test
+	public void testConstructor() throws GraphDbMappingException {
+		Type adt = typeFactory.abstractDataType(typeStore, "SomeADT");
+		Type constructorType = typeFactory.constructor(typeStore, adt, "someConstructor", 
+			typeFactory.boolType(), typeFactory.integerType());
+		IValue constructorValue = valueFactory.constructor(constructorType, valueFactory.bool(true), valueFactory.integer(5));
+		graphDbValueIO.write(id, constructorValue);
+		assertEquals(constructorValue, graphDbValueIO.read(id, constructorValue));
 	}
 
 }

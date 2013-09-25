@@ -100,14 +100,13 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 	@Override
 	public Node visitNode(INode nodeValue) throws GraphDbMappingException {
 		return createAnnotatableNode(nodeValue, PropertyNames.NODE, RelTypes.NEXT_CHILD_NODE, RelTypes.NODE_HEAD,
-				RelTypes.ANNOTATION_NODE, TypeNames.NODE);
+				RelTypes.ANNOTATION_NODE);
 	}	
 
 	@Override
 	public Node visitConstructor(IConstructor constructorValue) throws GraphDbMappingException {
 		return createAnnotatableNode(constructorValue, PropertyNames.CONSTRUCTOR, 
-				RelTypes.NEXT_CHILD_CONSTRUCTOR, RelTypes.CONSTRUCTOR_HEAD, RelTypes.ANNOTATION_CONSTRUCTOR, 
-				TypeNames.CONSTRUCTOR);
+				RelTypes.NEXT_CHILD_CONSTRUCTOR, RelTypes.CONSTRUCTOR_HEAD, RelTypes.ANNOTATION_CONSTRUCTOR);
 	}
 
 	@Override
@@ -189,7 +188,7 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 	}
 	
 	private Node createAnnotatableNode(INode nodeValue, String propertyName, RelTypes childRelation,
-			RelTypes headRelation, RelTypes annotationRelation, String typeName) throws GraphDbMappingException {
+			RelTypes headRelation, RelTypes annotationRelation) throws GraphDbMappingException {
 		Node node = createIterableNodeCollection(nodeValue.getChildren().iterator(), childRelation, headRelation);
 		node.setProperty(propertyName, nodeValue.getName());
 		for (Entry<String, IValue> annotation : nodeValue.asAnnotatable().getAnnotations().entrySet()) {
@@ -197,7 +196,7 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 			annotationNode.setProperty(PropertyNames.ANNOTATION, annotation.getKey());
 			node.createRelationshipTo(annotationNode, annotationRelation);
 		}
-		node.setProperty(PropertyNames.TYPE, typeName);
+		node.setProperty(PropertyNames.TYPE, TypeNames.NODE);
 		return node;
 	}
 
