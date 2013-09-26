@@ -1,6 +1,7 @@
 package lapd.neo4j.test;
 
 import static org.junit.Assert.*;
+
 import lapd.neo4j.GraphDbMappingException;
 
 import org.eclipse.imp.pdb.facts.IValue;

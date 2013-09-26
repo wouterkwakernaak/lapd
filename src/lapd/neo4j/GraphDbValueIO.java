@@ -11,7 +11,6 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
-import org.neo4j.test.TestGraphDatabaseFactory;
 
 public class GraphDbValueIO implements IGraphDbValueIO {
 	
@@ -19,13 +18,9 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 	private final GraphDatabaseService graphDb;
 	private final Index<Node> nodeIndex;
 	
-	public GraphDbValueIO(boolean persistent) throws IOException {
-		if (persistent) {
-			String dbPath = getDbPath();
-			graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
-		}
-		else 
-			graphDb = new TestGraphDatabaseFactory().newImpermanentDatabase();
+	public GraphDbValueIO() throws IOException {
+		String dbPath = getDbPath();
+		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
 		registerShutdownHook(graphDb);
 		nodeIndex = graphDb.index().forNodes("nodes");
 		graphDbValueInsertionVisitor = new GraphDbValueInsertionVisitor(graphDb);		
@@ -47,6 +42,10 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 	            graphDb.shutdown();
 	        }
 	    });
+	}
+	
+	public void shutdown() {
+		graphDb.shutdown();
 	}
 
 	@Override
@@ -75,6 +74,6 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 		else
 			retrievedValue = ((IValue)value).getType().accept(new GraphDbTypeRetrievalVisitor(node));
 		return (T)retrievedValue;
-	}
+	}	
 
 }

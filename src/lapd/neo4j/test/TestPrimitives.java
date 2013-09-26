@@ -3,12 +3,13 @@ package lapd.neo4j.test;
 import static org.junit.Assert.*;
 
 import lapd.neo4j.GraphDbMappingException;
+
 import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.junit.Test;
 
 public class TestPrimitives extends BaseGraphDbTest {
-	
+
 	@Test
 	public void testInteger() throws GraphDbMappingException {
 		IValue integerValue = valueFactory.integer(13);
