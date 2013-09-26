@@ -9,7 +9,6 @@ import java.util.Map;
 import org.eclipse.imp.pdb.facts.IMapWriter;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
-import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
 import org.eclipse.imp.pdb.facts.io.IValueTextReader;
 import org.eclipse.imp.pdb.facts.io.StandardTextReader;
 import org.eclipse.imp.pdb.facts.type.ITypeVisitor;
@@ -24,9 +23,9 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 	private final Node node;
 	private final IValueFactory valueFactory;
 	
-	public GraphDbTypeRetrievalVisitor(Node node) {
+	public GraphDbTypeRetrievalVisitor(Node node, IValueFactory valueFactory) {
 		this.node = node;
-		valueFactory = ValueFactory.getInstance();
+		this.valueFactory = valueFactory;
 	}
 	
 	@Override
@@ -79,10 +78,10 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 			return valueFactory.list(TypeFactory.getInstance().voidType());
 		List<IValue> valueList = new ArrayList<IValue>();
 		Node currentNode = node.getSingleRelationship(RelTypes.LIST_HEAD, Direction.OUTGOING).getEndNode();
-		valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+		valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory)));
 		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_LIST_ELEMENT)) {
 			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_LIST_ELEMENT, Direction.OUTGOING).getEndNode();
-			valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+			valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory)));
 		}
 		return valueFactory.list(valueList.toArray(new IValue[valueList.size()]));
 	}
@@ -93,10 +92,10 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 			return valueFactory.set(TypeFactory.getInstance().voidType());
 		List<IValue> valueList = new ArrayList<IValue>();
 		Node currentNode = node.getSingleRelationship(RelTypes.SET_HEAD, Direction.OUTGOING).getEndNode();
-		valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+		valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory)));
 		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_SET_ELEMENT)) {
 			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_SET_ELEMENT, Direction.OUTGOING).getEndNode();
-			valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+			valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory)));
 		}
 		return valueFactory.set(valueList.toArray(new IValue[valueList.size()]));
 	}
@@ -108,10 +107,10 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 			return valueFactory.node(nodeName);		
 		List<IValue> valueList = new ArrayList<IValue>();
 		Node currentNode = node.getSingleRelationship(RelTypes.NODE_HEAD, Direction.OUTGOING).getEndNode();
-		valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+		valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory)));
 		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_CHILD_NODE)) {
 			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_CHILD_NODE, Direction.OUTGOING).getEndNode();
-			valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+			valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory)));
 		}
 		if (!node.hasRelationship(Direction.OUTGOING, RelTypes.ANNOTATION_NODE)) 
 			return valueFactory.node(nodeName, valueList.toArray(new IValue[valueList.size()]));
@@ -119,7 +118,7 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 		for (Relationship rel : node.getRelationships(Direction.OUTGOING, RelTypes.ANNOTATION_NODE)) {
 			Node annotationNode = rel.getEndNode();
 			String annotationName = annotationNode.getProperty(PropertyNames.ANNOTATION).toString();
-			IValue annotationValue = TypeDeducer.getType(annotationNode).accept(new GraphDbTypeRetrievalVisitor(annotationNode));
+			IValue annotationValue = TypeDeducer.getType(annotationNode).accept(new GraphDbTypeRetrievalVisitor(annotationNode, valueFactory));
 			annotations.put(annotationName, annotationValue);
 		}
 		return valueFactory.node(nodeName, annotations, valueList.toArray(new IValue[valueList.size()]));
@@ -131,10 +130,10 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 			return valueFactory.constructor(type);		
 		List<IValue> valueList = new ArrayList<IValue>();
 		Node currentNode = node.getSingleRelationship(RelTypes.CONSTRUCTOR_HEAD, Direction.OUTGOING).getEndNode();
-		valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+		valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory)));
 		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_CHILD_CONSTRUCTOR)) {
 			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_CHILD_CONSTRUCTOR, Direction.OUTGOING).getEndNode();
-			valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+			valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory)));
 		}
 		if (!node.hasRelationship(Direction.OUTGOING, RelTypes.ANNOTATION_CONSTRUCTOR))
 			return valueFactory.constructor(type, valueList.toArray(new IValue[valueList.size()]));
@@ -142,7 +141,7 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 		for (Relationship rel : node.getRelationships(Direction.OUTGOING, RelTypes.ANNOTATION_CONSTRUCTOR)) {
 			Node annotationNode = rel.getEndNode();
 			String annotationName = annotationNode.getProperty(PropertyNames.ANNOTATION).toString();
-			IValue annotationValue = TypeDeducer.getType(annotationNode).accept(new GraphDbTypeRetrievalVisitor(annotationNode));
+			IValue annotationValue = TypeDeducer.getType(annotationNode).accept(new GraphDbTypeRetrievalVisitor(annotationNode, valueFactory));
 			annotations.put(annotationName, annotationValue);
 		}
 		return valueFactory.constructor(type, annotations, valueList.toArray(new IValue[valueList.size()]));
@@ -154,10 +153,10 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 			return valueFactory.tuple();
 		List<IValue> valueList = new ArrayList<IValue>();
 		Node currentNode = node.getSingleRelationship(RelTypes.TUPLE_HEAD, Direction.OUTGOING).getEndNode();
-		valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+		valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory)));
 		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_TUPLE_ELEMENT)) {
 			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_TUPLE_ELEMENT, Direction.OUTGOING).getEndNode();
-			valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode)));
+			valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory)));
 		}
 		return valueFactory.tuple(valueList.toArray(new IValue[valueList.size()]));
 	}
@@ -169,13 +168,13 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 			return mapWriter.done();
 		Node currentKeyNode = node.getSingleRelationship(RelTypes.MAP_HEAD, Direction.OUTGOING).getEndNode();
 		Node currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.IS_MAP_VALUE, Direction.OUTGOING).getEndNode();
-		mapWriter.put(TypeDeducer.getType(currentKeyNode).accept(new GraphDbTypeRetrievalVisitor(currentKeyNode)),
-				TypeDeducer.getType(currentValueNode).accept(new GraphDbTypeRetrievalVisitor(currentValueNode)));
+		mapWriter.put(TypeDeducer.getType(currentKeyNode).accept(new GraphDbTypeRetrievalVisitor(currentKeyNode, valueFactory)),
+				TypeDeducer.getType(currentValueNode).accept(new GraphDbTypeRetrievalVisitor(currentValueNode, valueFactory)));
 		while (currentKeyNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_MAP_ELEMENT)) {
 			currentKeyNode = currentKeyNode.getSingleRelationship(RelTypes.NEXT_MAP_ELEMENT, Direction.OUTGOING).getEndNode();
 			currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.IS_MAP_VALUE, Direction.OUTGOING).getEndNode();
-			mapWriter.put(TypeDeducer.getType(currentKeyNode).accept(new GraphDbTypeRetrievalVisitor(currentKeyNode)),
-					TypeDeducer.getType(currentValueNode).accept(new GraphDbTypeRetrievalVisitor(currentValueNode)));
+			mapWriter.put(TypeDeducer.getType(currentKeyNode).accept(new GraphDbTypeRetrievalVisitor(currentKeyNode, valueFactory)),
+					TypeDeducer.getType(currentValueNode).accept(new GraphDbTypeRetrievalVisitor(currentValueNode, valueFactory)));
 		}
 		return mapWriter.done();
 	}

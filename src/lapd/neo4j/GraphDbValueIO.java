@@ -6,6 +6,7 @@ import java.util.Properties;
 
 import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -15,10 +16,12 @@ import org.neo4j.graphdb.index.Index;
 public class GraphDbValueIO implements IGraphDbValueIO {
 	
 	private final GraphDbValueInsertionVisitor graphDbValueInsertionVisitor;
+	private final IValueFactory valueFactory;
 	private final GraphDatabaseService graphDb;
 	private final Index<Node> nodeIndex;
 	
-	public GraphDbValueIO() throws IOException {
+	public GraphDbValueIO(IValueFactory valueFactory) throws IOException {
+		this.valueFactory = valueFactory;
 		String dbPath = getDbPath();
 		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
 		registerShutdownHook(graphDb);
@@ -73,9 +76,9 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 		Node node = nodeIndex.get("id", id).getSingle();
 		IValue retrievedValue = null;
 		if (value instanceof IConstructor)
-			retrievedValue = ((IConstructor)value).getConstructorType().accept(new GraphDbTypeRetrievalVisitor(node));
+			retrievedValue = ((IConstructor)value).getConstructorType().accept(new GraphDbTypeRetrievalVisitor(node, valueFactory));
 		else
-			retrievedValue = ((IValue)value).getType().accept(new GraphDbTypeRetrievalVisitor(node));
+			retrievedValue = ((IValue)value).getType().accept(new GraphDbTypeRetrievalVisitor(node, valueFactory));
 		return (T)retrievedValue;
 	}	
 
