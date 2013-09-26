@@ -30,8 +30,11 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 		Properties prop = new Properties();
 		InputStream stream = ClassLoader.class.getResourceAsStream("/config.properties");
 		prop.load(stream);
-		String path = prop.getProperty("databasesFolderPath") + prop.getProperty("neo4jDbName");
-		return path;
+		String neo4jDbName = prop.getProperty("neo4jDbName");
+		String userSpecifiedDir = prop.getProperty("databasesDirectory");
+		if (userSpecifiedDir != null)
+			return userSpecifiedDir + "/" + neo4jDbName;
+		return System.getProperty("user.home") + "/databases/" + neo4jDbName;
 	}
 	
 	private static void registerShutdownHook(final GraphDatabaseService graphDb)
