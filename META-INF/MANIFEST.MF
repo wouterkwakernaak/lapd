@@ -228,3 +228,4 @@ Export-Package: com.googlecode.concurrentlinkedhashmap,
  scala.xml.transform,
  test
 Require-Bundle: org.eclipse.imp.pdb.values;bundle-version="0.4.1"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
