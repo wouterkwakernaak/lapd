@@ -16,21 +16,21 @@ public class TestNode extends BaseGraphDbTest {
 	public void testNullaryNode() throws GraphDbMappingException {
 		IValue nodeValue = valueFactory.node("");
 		graphDbValueIO.write(id, nodeValue);
-		assertEquals(nodeValue, graphDbValueIO.read(id, nodeValue));
+		assertEquals(nodeValue, graphDbValueIO.read(id, nodeValue.getType()));
 	}
 	
 	@Test
 	public void testNode() throws GraphDbMappingException {
 		IValue nodeValue = valueFactory.node("someNode", createChildren());
 		graphDbValueIO.write(id, nodeValue);
-		assertEquals(nodeValue, graphDbValueIO.read(id, nodeValue));
+		assertEquals(nodeValue, graphDbValueIO.read(id, nodeValue.getType()));
 	}
 	
 	@Test
 	public void testNodeWithAnnotations() throws GraphDbMappingException {
 		IValue nodeValue = valueFactory.node("someNode", createAnnotations(), createChildren());
 		graphDbValueIO.write(id, nodeValue);
-		assertEquals(nodeValue, graphDbValueIO.read(id, nodeValue));
+		assertEquals(nodeValue, graphDbValueIO.read(id, nodeValue.getType()));
 	}
 
 	private Map<String, IValue> createAnnotations() {

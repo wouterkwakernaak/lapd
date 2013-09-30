@@ -16,21 +16,21 @@ public class TestList extends BaseGraphDbTest {
 	public void testBooleanList() throws GraphDbMappingException {
 		IList booleanList = createBooleanList();
 		graphDbValueIO.write(id, booleanList);
-		assertEquals(booleanList, graphDbValueIO.read(id, booleanList));
+		assertEquals(booleanList, graphDbValueIO.read(id, booleanList.getType()));
 	}
 	
 	@Test
 	public void testEmptyList() throws GraphDbMappingException {
 		IList emptyList = valueFactory.list(TypeFactory.getInstance().voidType());
 		graphDbValueIO.write(id, emptyList);
-		assertEquals(emptyList, graphDbValueIO.read(id, emptyList));
+		assertEquals(emptyList, graphDbValueIO.read(id, emptyList.getType()));
 	}
 	
 	@Test
 	public void testIntegerList() throws GraphDbMappingException {
 		IList integerList = createIntegerList();
 		graphDbValueIO.write(id, integerList);
-		assertEquals(integerList, graphDbValueIO.read(id, integerList));
+		assertEquals(integerList, graphDbValueIO.read(id, integerList.getType()));
 	}
 	
 	@Test
@@ -39,7 +39,7 @@ public class TestList extends BaseGraphDbTest {
 		IList integerList2 = createIntegerList();
 		IList listOfLists = valueFactory.list(integerList1, integerList2);
 		graphDbValueIO.write(id, listOfLists);
-		assertEquals(listOfLists, graphDbValueIO.read(id, listOfLists));
+		assertEquals(listOfLists, graphDbValueIO.read(id, listOfLists.getType()));
 	}
 
 	private IList createBooleanList() {

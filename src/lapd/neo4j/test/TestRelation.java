@@ -15,7 +15,7 @@ public class TestRelation extends BaseGraphDbTest {
 		IValue tuple2 = valueFactory.tuple(new IValue[] { valueFactory.integer(2), valueFactory.string("two") });
 		IValue relationValue = valueFactory.set(tuple1, tuple2);
 		graphDbValueIO.write(id, relationValue);
-		assertEquals(relationValue, graphDbValueIO.read(id, relationValue));
+		assertEquals(relationValue, graphDbValueIO.read(id, relationValue.getType()));
 	}
 
 }

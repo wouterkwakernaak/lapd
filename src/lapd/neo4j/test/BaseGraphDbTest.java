@@ -8,17 +8,20 @@ import lapd.neo4j.GraphDbValueIO;
 
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;
+import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.junit.Before;
 
 public class BaseGraphDbTest {
 	
-	protected IValueFactory valueFactory;	
+	protected IValueFactory valueFactory;
+	protected TypeFactory typeFactory;
 	protected String id;
 	protected GraphDbValueIO graphDbValueIO;
 
 	@Before
 	public void setUp() throws IOException {
-		valueFactory = ValueFactory.getInstance();	    
+		valueFactory = ValueFactory.getInstance();
+		typeFactory = TypeFactory.getInstance();
 	    id = UUID.randomUUID().toString();
 	    graphDbValueIO = DbInstances.NEO4J;
 	}

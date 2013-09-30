@@ -17,7 +17,7 @@ public class TestMap extends BaseGraphDbTest {
 		mapWriter.put(valueFactory.integer(2), valueFactory.string("two"));
 		IMap mapValue = mapWriter.done();
 		graphDbValueIO.write(id, mapValue);
-		assertEquals(mapValue, graphDbValueIO.read(id, mapValue));
+		assertEquals(mapValue, graphDbValueIO.read(id, mapValue.getType()));
 	}
 
 }

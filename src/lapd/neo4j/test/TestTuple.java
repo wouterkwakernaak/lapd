@@ -13,14 +13,14 @@ public class TestTuple extends BaseGraphDbTest {
 	public void testEmptyTuple() throws GraphDbMappingException {
 		IValue tupleValue = valueFactory.tuple();
 		graphDbValueIO.write(id, tupleValue);
-		assertEquals(tupleValue, graphDbValueIO.read(id, tupleValue));
+		assertEquals(tupleValue, graphDbValueIO.read(id, tupleValue.getType()));
 	}
 	
 	@Test
 	public void testTuple() throws GraphDbMappingException {
 		IValue tupleValue = valueFactory.tuple(createTupleElements());
 		graphDbValueIO.write(id, tupleValue);
-		assertEquals(tupleValue, graphDbValueIO.read(id, tupleValue));
+		assertEquals(tupleValue, graphDbValueIO.read(id, tupleValue.getType()));
 	}	
 	
 	private IValue[] createTupleElements() {

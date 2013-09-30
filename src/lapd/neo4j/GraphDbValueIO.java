@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.eclipse.imp.pdb.facts.IConstructor;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
+import org.eclipse.imp.pdb.facts.type.Type;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -72,14 +72,10 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 	}
 
 	@Override
-	public <T> T read(String id, T value) throws GraphDbMappingException {
+	public IValue read(String id, Type type) throws GraphDbMappingException {
 		Node node = nodeIndex.get("id", id).getSingle();
-		IValue retrievedValue = null;
-		if (value instanceof IConstructor)
-			retrievedValue = ((IConstructor)value).getConstructorType().accept(new GraphDbTypeRetrievalVisitor(node, valueFactory));
-		else
-			retrievedValue = ((IValue)value).getType().accept(new GraphDbTypeRetrievalVisitor(node, valueFactory));
-		return (T)retrievedValue;
+		IValue retrievedValue = type.accept(new GraphDbTypeRetrievalVisitor(node, valueFactory));
+		return retrievedValue;
 	}	
 
 }

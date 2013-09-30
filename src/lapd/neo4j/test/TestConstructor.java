@@ -31,7 +31,7 @@ public class TestConstructor extends BaseGraphDbTest {
 		Type constructorType = typeFactory.constructor(typeStore, adt, "someConstructor");
 		IValue constructorValue = valueFactory.constructor(constructorType);
 		graphDbValueIO.write(id, constructorValue);
-		assertEquals(constructorValue, graphDbValueIO.read(id, constructorValue));
+		assertEquals(constructorValue, graphDbValueIO.read(id, constructorType));
 	}
 	
 	@Test
@@ -41,7 +41,7 @@ public class TestConstructor extends BaseGraphDbTest {
 			typeFactory.boolType(), typeFactory.integerType());
 		IValue constructorValue = valueFactory.constructor(constructorType, valueFactory.bool(true), valueFactory.integer(5));
 		graphDbValueIO.write(id, constructorValue);
-		assertEquals(constructorValue, graphDbValueIO.read(id, constructorValue));
+		assertEquals(constructorValue, graphDbValueIO.read(id, constructorType));
 	}
 
 }
