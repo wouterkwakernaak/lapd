@@ -83,6 +83,8 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 
 	@Override
 	public void write(String id, IValue value) throws GraphDbMappingException {
+		if (nodeIndex.get("id", id).size() != 0)
+			throw new GraphDbMappingException("Cannot write value to database. The id already exists.");
 		Transaction tx = graphDb.beginTx();
 		try {
 			Node node = value.accept(graphDbValueInsertionVisitor);
