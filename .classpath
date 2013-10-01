@@ -1,30 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="lib/neo4j/concurrentlinkedhashmap-lru-1.3.1.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/geronimo-jta_1.1_spec-1.1.1.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/lucene-core-3.6.2.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/neo4j-cypher-1.9.2.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/neo4j-graph-algo-1.9.2.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/neo4j-graph-matching-1.9.2.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/neo4j-jmx-1.9.2.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/neo4j-kernel-1.9.2-javadoc.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/neo4j-kernel-1.9.2-test-sources.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/neo4j-kernel-1.9.2-tests.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/neo4j-kernel-1.9.2.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="jar:platform:/resource/lapd/lib/neo4j/neo4j-kernel-1.9.2-javadoc.jar!/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="lib/neo4j/neo4j-lucene-index-1.9.2.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/neo4j-shell-1.9.2.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/neo4j-udc-1.9.2.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/org.apache.servicemix.bundles.jline-0.9.94_1.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/scala-library-2.10.0.jar"/>
-	<classpathentry kind="lib" path="lib/neo4j/server-api-1.9.2.jar"/>
-	<classpathentry kind="lib" path="lib/hsqldb/hsqldb.jar"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/concurrentlinkedhashmap-lru-1.3.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/geronimo-jta_1.1_spec-1.1.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/lucene-core-3.6.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-cypher-1.9.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-graph-algo-1.9.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-graph-matching-1.9.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-jmx-1.9.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-kernel-1.9.2-javadoc.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-kernel-1.9.2-test-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-kernel-1.9.2-tests.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-kernel-1.9.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-lucene-index-1.9.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-shell-1.9.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-udc-1.9.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/org.apache.servicemix.bundles.jline-0.9.94_1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/scala-library-2.10.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/server-api-1.9.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/hsqldb/hsqldb.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

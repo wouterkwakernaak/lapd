@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: lapd
-Bundle-SymbolicName: lapd
+Bundle-SymbolicName: lapd;singleton:=true
 Bundle-Version: 0.0.1.qualifier
-Bundle-ClassPath: lapd.jar,
+Bundle-ClassPath: .,
  lib/neo4j/concurrentlinkedhashmap-lru-1.3.1.jar,
  lib/neo4j/geronimo-jta_1.1_spec-1.1.1.jar,
  lib/neo4j/lucene-core-3.6.2.jar,
@@ -229,3 +229,4 @@ Export-Package: com.googlecode.concurrentlinkedhashmap,
  test
 Require-Bundle: org.eclipse.imp.pdb.values;bundle-version="0.4.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-Vendor: wouter@wouterkwakernaak.nl
