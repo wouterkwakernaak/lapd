@@ -104,6 +104,8 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 	@Override
 	public IValue read(String id, Type type) throws GraphDbMappingException {
 		Node node = nodeIndex.get("id", id).getSingle();
+		if (node == null)
+			throw new GraphDbMappingException("Id not found.");
 		try {
 			return type.accept(new GraphDbTypeRetrievalVisitor(node, valueFactory));
 		}
