@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
@@ -12,6 +15,7 @@ import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
+import org.osgi.framework.Bundle;
 
 public class GraphDbValueIO implements IGraphDbValueIO {
 	
@@ -31,7 +35,12 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 
 	private String getDbPath() throws IOException {
 		Properties prop = new Properties();
-		InputStream stream = ClassLoader.class.getResourceAsStream("/config.properties");
+		InputStream stream;
+		Bundle bundle = Platform.getBundle("lapd");
+		if (bundle != null)
+			stream = FileLocator.openStream(bundle,	new Path("bin/config.properties"), false);
+		else
+			stream = ClassLoader.class.getResourceAsStream("/config.properties");
 		prop.load(stream);
 		String neo4jDbName = prop.getProperty("neo4jDbName");
 		String userSpecifiedDir = prop.getProperty("databasesDirectory");

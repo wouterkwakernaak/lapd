@@ -230,3 +230,5 @@ Export-Package: com.googlecode.concurrentlinkedhashmap,
 Require-Bundle: org.eclipse.imp.pdb.values;bundle-version="0.4.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-Vendor: wouter@wouterkwakernaak.nl
+Import-Package: org.eclipse.core.runtime,
+ org.osgi.framework;version="1.7.0"
