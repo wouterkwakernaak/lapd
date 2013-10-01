@@ -3,7 +3,6 @@ package lapd.neo4j.test;
 import java.io.IOException;
 import java.util.UUID;
 
-import lapd.DbInstances;
 import lapd.neo4j.GraphDbValueIO;
 
 import org.eclipse.imp.pdb.facts.IValueFactory;
@@ -20,7 +19,8 @@ public class BaseGraphDbTest {
 	public void setUp() throws IOException {
 		valueFactory = ValueFactory.getInstance();
 	    id = UUID.randomUUID().toString();
-	    graphDbValueIO = DbInstances.NEO4J;
+	    graphDbValueIO = GraphDbValueIO.getInstance();
+	    graphDbValueIO.init(valueFactory);
 	}
 
 }

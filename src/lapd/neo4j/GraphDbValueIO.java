@@ -19,20 +19,38 @@ import org.osgi.framework.Bundle;
 
 public class GraphDbValueIO implements IGraphDbValueIO {
 	
+	private static final GraphDbValueIO instance;
+	
+	static {
+        try { 
+        	instance = new GraphDbValueIO();
+        } catch (IOException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
+	
+	public static GraphDbValueIO getInstance() {
+		return instance;
+	}
+	
 	private final GraphDbValueInsertionVisitor graphDbValueInsertionVisitor;
-	private final IValueFactory valueFactory;
+	private IValueFactory valueFactory;
 	private final GraphDatabaseService graphDb;
 	private final Index<Node> nodeIndex;
 	
-	public GraphDbValueIO(IValueFactory valueFactory) throws IOException {
-		this.valueFactory = valueFactory;
+	
+	private GraphDbValueIO() throws IOException {
 		String dbPath = getDbPath();
 		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
 		registerShutdownHook(graphDb);
 		nodeIndex = graphDb.index().forNodes("nodes");
 		graphDbValueInsertionVisitor = new GraphDbValueInsertionVisitor(graphDb);		
 	}
-
+	
+	public void init(IValueFactory valueFactory) {
+		this.valueFactory = valueFactory;
+	}
+	
 	private String getDbPath() throws IOException {
 		Properties prop = new Properties();
 		InputStream stream;
