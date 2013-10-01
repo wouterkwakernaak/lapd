@@ -12,6 +12,7 @@ import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
@@ -103,8 +104,12 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 	@Override
 	public IValue read(String id, Type type) throws GraphDbMappingException {
 		Node node = nodeIndex.get("id", id).getSingle();
-		IValue retrievedValue = type.accept(new GraphDbTypeRetrievalVisitor(node, valueFactory));
-		return retrievedValue;
+		try {
+			return type.accept(new GraphDbTypeRetrievalVisitor(node, valueFactory));
+		}
+		catch (NotFoundException e) {
+			throw new GraphDbMappingException("Id and type did not match.");
+		}
 	}	
 
 }
