@@ -17,6 +17,7 @@ public class TypeDeducer {
 			case TypeNames.LIST: 			return typeFactory.listType(typeFactory.valueType());
 			case TypeNames.MAP: 			return typeFactory.mapType(typeFactory.valueType(), typeFactory.valueType());
 			case TypeNames.NODE: 			return typeFactory.nodeType();
+			case TypeNames.CONSTRUCTOR: 	return null; // type cannot be created without additional info
 			case TypeNames.RATIONAL: 		return typeFactory.rationalType();
 			case TypeNames.REAL: 			return typeFactory.realType();
 			case TypeNames.SET: 			return typeFactory.setType(typeFactory.valueType());
