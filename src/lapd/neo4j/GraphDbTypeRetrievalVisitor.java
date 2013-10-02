@@ -14,6 +14,7 @@ import org.eclipse.imp.pdb.facts.io.StandardTextReader;
 import org.eclipse.imp.pdb.facts.type.ITypeVisitor;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
+import org.eclipse.imp.pdb.facts.type.TypeStore;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -192,11 +193,24 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 	@Override
 	public IValue visitAlias(Type type) throws GraphDbMappingException {
 		throw new GraphDbMappingException("Cannot handle alias types.");
-	}	
+	}
 
 	@Override
 	public IValue visitAbstractData(Type type) throws GraphDbMappingException {
-		throw new GraphDbMappingException("Cannot handle abstract data types.");
+		TypeStore store = new TypeStore();
+		store.declareAbstractDataType(type);
+		TypeFactory typeFactory = TypeFactory.getInstance();
+		String name = node.getProperty(PropertyNames.CONSTRUCTOR).toString();
+		if (!node.hasRelationship(Direction.OUTGOING, RelTypes.CONSTRUCTOR_HEAD)) 
+			return visitConstructor(typeFactory.constructor(store, type, name));
+		List<Type> childrenTypes = new ArrayList<Type>();
+		Node currentNode = node.getSingleRelationship(RelTypes.CONSTRUCTOR_HEAD, Direction.OUTGOING).getEndNode();
+		childrenTypes.add(TypeDeducer.getType(currentNode));
+		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_CHILD_CONSTRUCTOR)) {
+			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_CHILD_CONSTRUCTOR, Direction.OUTGOING).getEndNode();
+			childrenTypes.add(TypeDeducer.getType(currentNode));
+		}
+		return visitConstructor(typeFactory.constructor(store, type, name, childrenTypes.toArray()));
 	}	
 
 	@Override

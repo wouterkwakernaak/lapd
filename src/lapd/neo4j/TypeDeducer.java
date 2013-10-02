@@ -26,5 +26,5 @@ public class TypeDeducer {
 			default: 						return typeFactory.valueType();
 		}
 	}
-
+	
 }
