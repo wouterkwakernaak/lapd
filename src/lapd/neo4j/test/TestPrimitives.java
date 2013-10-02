@@ -52,9 +52,7 @@ public class TestPrimitives extends BaseGraphDbTest {
 		long dateTimeUnderTest = System.currentTimeMillis();
 		IValue dateTimeValue = valueFactory.datetime(dateTimeUnderTest);
 		graphDbValueIO.write(id, dateTimeValue);
-		// the time deviates by one hour, not sure why
-		IValue deviatedDateTimeValue = valueFactory.datetime(dateTimeUnderTest + 3600000);
-		assertEquals(deviatedDateTimeValue, graphDbValueIO.read(id, dateTimeValue.getType()));
+		assertEquals(dateTimeValue, graphDbValueIO.read(id, dateTimeValue.getType()));
 	}
 	
 	@Test

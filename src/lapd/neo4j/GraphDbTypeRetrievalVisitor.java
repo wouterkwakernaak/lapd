@@ -70,7 +70,7 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 	
 	@Override
 	public IValue visitDateTime(Type type) throws GraphDbMappingException {
-		return valueFactory.datetime((Long)node.getProperty(PropertyNames.DATE_TIME));
+		return valueFactory.datetime((Long)node.getProperty(PropertyNames.DATE_TIME) - 3600000);
 	}
 
 	@Override
