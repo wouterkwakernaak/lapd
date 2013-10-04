@@ -10,6 +10,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
+import org.eclipse.imp.pdb.facts.type.TypeStore;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.NotFoundException;
@@ -18,7 +19,7 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
 import org.osgi.framework.Bundle;
 
-public class GraphDbValueIO implements IGraphDbValueIO {
+public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	
 	private static final GraphDbValueIO instance;
 	
@@ -102,16 +103,16 @@ public class GraphDbValueIO implements IGraphDbValueIO {
 	}
 
 	@Override
-	public IValue read(String id, Type type) throws GraphDbMappingException {
+	public IValue read(String id, Type type, TypeStore typeStore) throws GraphDbMappingException {
 		Node node = nodeIndex.get("id", id).getSingle();
 		if (node == null)
 			throw new GraphDbMappingException("Id not found.");
 		try {
-			return type.accept(new GraphDbTypeRetrievalVisitor(node, valueFactory));
+			return type.accept(new GraphDbTypeRetrievalVisitor(node, valueFactory, typeStore));
 		}
 		catch (NotFoundException e) {
-			throw new GraphDbMappingException("Id and type did not match.");
+			throw new GraphDbMappingException("Could not find value. The id and type probably did not match.");
 		}
-	}	
+	}
 
 }
