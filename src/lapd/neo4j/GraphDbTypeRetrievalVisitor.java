@@ -107,27 +107,26 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 	
 	@Override
 	public IValue visitNode(Type type) throws GraphDbMappingException {
-//		String nodeName = node.getProperty(PropertyNames.NODE).toString();
-//		if (!node.hasRelationship(Direction.OUTGOING, RelTypes.NODE_HEAD)) 
-//			return valueFactory.node(nodeName);		
-//		List<IValue> valueList = new ArrayList<IValue>();
-//		Node currentNode = node.getSingleRelationship(RelTypes.NODE_HEAD, Direction.OUTGOING).getEndNode();
-//		valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory)));
-//		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_CHILD_NODE)) {
-//			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_CHILD_NODE, Direction.OUTGOING).getEndNode();
-//			valueList.add(TypeDeducer.getType(currentNode).accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory)));
-//		}
-//		if (!node.hasRelationship(Direction.OUTGOING, RelTypes.ANNOTATION_NODE)) 
-//			return valueFactory.node(nodeName, valueList.toArray(new IValue[valueList.size()]));
-//		Map<String, IValue> annotations = new HashMap<String, IValue>();
-//		for (Relationship rel : node.getRelationships(Direction.OUTGOING, RelTypes.ANNOTATION_NODE)) {
-//			Node annotationNode = rel.getEndNode();
-//			String annotationName = annotationNode.getProperty(PropertyNames.ANNOTATION).toString();
-//			IValue annotationValue = TypeDeducer.getType(annotationNode).accept(new GraphDbTypeRetrievalVisitor(annotationNode, valueFactory));
-//			annotations.put(annotationName, annotationValue);
-//		}
-//		return valueFactory.node(nodeName, annotations, valueList.toArray(new IValue[valueList.size()]));
-		return null;
+		String nodeName = node.getProperty(PropertyNames.NODE).toString();
+		if (!node.hasRelationship(Direction.OUTGOING, RelTypes.NODE_HEAD)) 
+			return valueFactory.node(nodeName);		
+		List<IValue> valueList = new ArrayList<IValue>();
+		Node currentNode = node.getSingleRelationship(RelTypes.NODE_HEAD, Direction.OUTGOING).getEndNode();
+		valueList.add(new TypeDeducer(currentNode, typeStore).getType().accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory, typeStore)));
+		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_CHILD_NODE)) {
+			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_CHILD_NODE, Direction.OUTGOING).getEndNode();
+			valueList.add(new TypeDeducer(currentNode, typeStore).getType().accept(new GraphDbTypeRetrievalVisitor(currentNode, valueFactory, typeStore)));
+		}
+		if (!node.hasRelationship(Direction.OUTGOING, RelTypes.ANNOTATION_NODE)) 
+			return valueFactory.node(nodeName, valueList.toArray(new IValue[valueList.size()]));
+		Map<String, IValue> annotations = new HashMap<String, IValue>();
+		for (Relationship rel : node.getRelationships(Direction.OUTGOING, RelTypes.ANNOTATION_NODE)) {
+			Node annotationNode = rel.getEndNode();
+			String annotationName = annotationNode.getProperty(PropertyNames.ANNOTATION).toString();
+			IValue annotationValue = new TypeDeducer(annotationNode, typeStore).getType().accept(new GraphDbTypeRetrievalVisitor(annotationNode, valueFactory, typeStore));
+			annotations.put(annotationName, annotationValue);
+		}
+		return valueFactory.node(nodeName, annotations, valueList.toArray(new IValue[valueList.size()]));
 	}
 	
 	@Override
@@ -149,7 +148,7 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 		for (Relationship rel : node.getRelationships(Direction.OUTGOING, RelTypes.ANNOTATION_CONSTRUCTOR)) {
 			Node annotationNode = rel.getEndNode();
 			String annotationName = annotationNode.getProperty(PropertyNames.ANNOTATION).toString();
-			IValue annotationValue = type.getAnnotationType(typeStore, annotationName).accept(new GraphDbTypeRetrievalVisitor(annotationNode, valueFactory, typeStore));
+			IValue annotationValue = new TypeDeducer(annotationNode, typeStore).getType().accept(new GraphDbTypeRetrievalVisitor(annotationNode, valueFactory, typeStore));
 			annotations.put(annotationName, annotationValue);
 		}
 		return valueFactory.constructor(type, annotations, valueList.toArray(new IValue[valueList.size()]));
@@ -212,7 +211,7 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 
 	@Override
 	public IValue visitValue(Type type) throws GraphDbMappingException {
-		throw new GraphDbMappingException("Cannot handle value types.");
+		return new TypeDeducer(node, typeStore).getType().accept(this);
 	}
 
 	@Override
