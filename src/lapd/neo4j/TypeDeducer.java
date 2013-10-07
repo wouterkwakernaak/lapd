@@ -2,6 +2,7 @@ package lapd.neo4j;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.type.TypeStore;
@@ -40,7 +41,10 @@ public class TypeDeducer {
 	}
 
 	private Type getConstructorType() {
-		return null;
+		String name = currentNode.getProperty(PropertyNames.CONSTRUCTOR).toString();
+		String adtName = currentNode.getProperty(PropertyNames.ADT).toString();
+		Type adt = typeStore.lookupAbstractDataType(adtName);		
+		return typeStore.lookupConstructor(adt, name).iterator().next();
 	}
 
 	private Type getTupleType() {

@@ -105,8 +105,10 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 
 	@Override
 	public Node visitConstructor(IConstructor constructorValue) throws GraphDbMappingException {
-		return createAnnotatableNode(constructorValue, PropertyNames.CONSTRUCTOR, 
+		Node node = createAnnotatableNode(constructorValue, PropertyNames.CONSTRUCTOR, 
 				RelTypes.NEXT_CHILD_CONSTRUCTOR, RelTypes.CONSTRUCTOR_HEAD, RelTypes.ANNOTATION_CONSTRUCTOR, TypeNames.CONSTRUCTOR);
+		node.setProperty(PropertyNames.ADT, constructorValue.getType().getAbstractDataType().getName());
+		return node;
 	}
 
 	@Override

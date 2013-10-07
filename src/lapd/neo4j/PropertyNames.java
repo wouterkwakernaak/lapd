@@ -15,5 +15,6 @@ public class PropertyNames {
 	public final static String LABEL = "label";
 	public final static String ANNOTATION = "annotation";
 	public final static String TYPE = "type";
+	public final static String ADT = "adt";
 
 }
