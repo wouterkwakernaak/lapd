@@ -195,7 +195,7 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 
 	@Override
 	public IValue visitNumber(Type type) throws GraphDbMappingException {
-		throw new GraphDbMappingException("Cannot handle number types.");
+		return new TypeDeducer(node, typeStore).getType().accept(this);
 	}
 
 	@Override
