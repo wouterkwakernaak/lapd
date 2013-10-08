@@ -200,7 +200,7 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 
 	@Override
 	public IValue visitAlias(Type type) throws GraphDbMappingException {
-		throw new GraphDbMappingException("Cannot handle alias types.");
+		return type.getAliased().accept(this);
 	}
 
 	@Override
