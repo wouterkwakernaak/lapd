@@ -221,7 +221,7 @@ public class GraphDbTypeRetrievalVisitor implements ITypeVisitor<IValue, GraphDb
 
 	@Override
 	public IValue visitParameter(Type type) throws GraphDbMappingException {
-		throw new GraphDbMappingException("Cannot handle parameter types.");
+		return type.getBound().accept(this);
 	}	
 
 }
