@@ -2,7 +2,9 @@ package lapd.databases.neo4j;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import org.eclipse.imp.pdb.facts.exceptions.OverloadingNotSupportedException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.type.TypeStore;
@@ -42,9 +44,11 @@ public class TypeDeducer {
 	}
 
 	private Type getConstructorType() {
-		String name = currentNode.getProperty(PropertyNames.CONSTRUCTOR).toString();
+		String name = currentNode.getProperty(PropertyNames.NODE).toString();
 		String adtName = currentNode.getProperty(PropertyNames.ADT).toString();
 		Type adt = typeStore.lookupAbstractDataType(adtName);		
+		if (adt == null)
+			return typeFactory.nodeType();
 		return typeStore.lookupConstructor(adt, name).iterator().next();
 	}
 

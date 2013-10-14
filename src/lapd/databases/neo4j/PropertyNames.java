@@ -11,7 +11,6 @@ public class PropertyNames {
 	public final static String SOURCE_LOCATION = "loc";
 	public final static String DATE_TIME = "datetime";
 	public final static String NODE = "node";
-	public final static String CONSTRUCTOR = "constructor";
 	public final static String ANNOTATION = "annotation";
 	public final static String TYPE = "type";
 	public final static String ADT = "adt";

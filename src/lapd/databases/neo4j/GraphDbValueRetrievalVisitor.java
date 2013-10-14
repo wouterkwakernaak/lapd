@@ -114,7 +114,7 @@ public class GraphDbValueRetrievalVisitor implements ITypeVisitor<IValue, GraphD
 	public IValue visitConstructor(Type type) throws GraphDbMappingException {		
 		if (!hasHead()) 
 			return valueFactory.constructor(type);		
-		List<IValue> valueList = getFields(type);
+		List<IValue> valueList = getConstructorFields(type);
 		if (!hasAnnotations())
 			return valueFactory.constructor(type, valueList.toArray(new IValue[valueList.size()]));
 		Map<String, IValue> annotations = getAnnotations();
@@ -125,7 +125,7 @@ public class GraphDbValueRetrievalVisitor implements ITypeVisitor<IValue, GraphD
 	public IValue visitTuple(Type type) throws GraphDbMappingException {
 		if (!hasHead())
 			return valueFactory.tuple();
-		List<IValue> valueList = getFields(type);
+		List<IValue> valueList = getTupleFields(type);
 		return valueFactory.tuple(valueList.toArray(new IValue[valueList.size()]));
 	}
 
@@ -164,7 +164,7 @@ public class GraphDbValueRetrievalVisitor implements ITypeVisitor<IValue, GraphD
 
 	@Override
 	public IValue visitAbstractData(Type type) throws GraphDbMappingException {
-		String name = node.getProperty(PropertyNames.CONSTRUCTOR).toString();
+		String name = node.getProperty(PropertyNames.NODE).toString();
 		return visitConstructor(typeStore.lookupConstructor(type, name).iterator().next());
 	}
 
@@ -216,7 +216,7 @@ public class GraphDbValueRetrievalVisitor implements ITypeVisitor<IValue, GraphD
 		return annotations;
 	}
 	
-	private List<IValue> getFields(Type type) throws GraphDbMappingException {
+	private List<IValue> getTupleFields(Type type) throws GraphDbMappingException {
 		List<IValue> valueList = new ArrayList<IValue>();
 		Node currentNode = node.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
 		int count = 0;
@@ -225,6 +225,17 @@ public class GraphDbValueRetrievalVisitor implements ITypeVisitor<IValue, GraphD
 			count++;
 			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING).getEndNode();
 			valueList.add(type.getFieldType(count).accept(new GraphDbValueRetrievalVisitor(currentNode, valueFactory, typeStore)));
+		}
+		return valueList;
+	}
+	
+	private List<IValue> getConstructorFields(Type type) throws GraphDbMappingException {
+		List<IValue> valueList = new ArrayList<IValue>();
+		Node currentNode = node.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
+		valueList.add(new TypeDeducer(currentNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(currentNode, valueFactory, typeStore)));
+		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_ELEMENT)) {
+			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING).getEndNode();
+			valueList.add(new TypeDeducer(currentNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(currentNode, valueFactory, typeStore)));
 		}
 		return valueList;
 	}
