@@ -2,9 +2,6 @@ package lapd.databases.neo4j;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-
-import org.eclipse.imp.pdb.facts.exceptions.OverloadingNotSupportedException;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.type.TypeStore;
