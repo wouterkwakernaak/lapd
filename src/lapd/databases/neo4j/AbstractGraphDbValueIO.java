@@ -1,4 +1,4 @@
-package lapd.neo4j;
+package lapd.databases.neo4j;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;

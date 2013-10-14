@@ -1,4 +1,4 @@
-package lapd.hsqldb;
+package lapd.databases.hsqldb;
 
 import org.eclipse.imp.pdb.facts.IBool;
 import org.eclipse.imp.pdb.facts.IConstructor;

@@ -1,4 +1,4 @@
-package lapd.neo4j;
+package lapd.databases.neo4j;
 import java.util.Iterator;
 import java.util.Map.Entry;
 

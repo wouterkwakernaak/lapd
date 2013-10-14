@@ -1,6 +1,6 @@
-package lapd.neo4j;
+package lapd.databases.neo4j;
 
-import lapd.DbMappingException;
+import lapd.databases.DbMappingException;
 
 
 public class GraphDbMappingException extends DbMappingException {

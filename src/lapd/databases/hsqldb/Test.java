@@ -1,4 +1,4 @@
-package lapd.hsqldb;
+package lapd.databases.hsqldb;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

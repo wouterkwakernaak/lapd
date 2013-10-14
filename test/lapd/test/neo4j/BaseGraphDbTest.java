@@ -1,9 +1,9 @@
-package lapd.neo4j.test;
+package lapd.test.neo4j;
 
 import java.io.IOException;
 import java.util.UUID;
 
-import lapd.neo4j.GraphDbValueIO;
+import lapd.databases.neo4j.GraphDbValueIO;
 
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.impl.fast.ValueFactory;

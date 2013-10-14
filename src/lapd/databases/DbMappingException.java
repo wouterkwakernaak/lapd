@@ -1,4 +1,4 @@
-package lapd;
+package lapd.databases;
 
 public class DbMappingException extends Exception {
 

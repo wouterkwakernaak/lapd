@@ -1,10 +1,10 @@
-package lapd.neo4j.test;
+package lapd.test.neo4j;
 
 import static org.junit.Assert.*;
 
 import java.io.IOException;
 
-import lapd.neo4j.GraphDbMappingException;
+import lapd.databases.neo4j.GraphDbMappingException;
 
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.type.Type;

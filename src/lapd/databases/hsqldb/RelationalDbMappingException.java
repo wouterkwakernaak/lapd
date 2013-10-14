@@ -1,6 +1,6 @@
-package lapd.hsqldb;
+package lapd.databases.hsqldb;
 
-import lapd.DbMappingException;
+import lapd.databases.DbMappingException;
 
 public class RelationalDbMappingException extends DbMappingException {	
 

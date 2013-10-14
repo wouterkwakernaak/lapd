@@ -1,8 +1,7 @@
-package lapd.neo4j.test;
+package lapd.test.neo4j;
 
 import static org.junit.Assert.*;
-
-import lapd.neo4j.GraphDbMappingException;
+import lapd.databases.neo4j.GraphDbMappingException;
 
 import org.eclipse.imp.pdb.facts.IMap;
 import org.eclipse.imp.pdb.facts.IMapWriter;
