@@ -15,7 +15,11 @@
 	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-kernel-1.9.2-javadoc.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-kernel-1.9.2-test-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-kernel-1.9.2-tests.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-kernel-1.9.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-kernel-1.9.2.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/lapd/lib/neo4j/neo4j-kernel-1.9.2-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-lucene-index-1.9.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-shell-1.9.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/neo4j/neo4j-udc-1.9.2.jar"/>
