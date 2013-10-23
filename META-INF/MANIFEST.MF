@@ -20,11 +20,8 @@ Bundle-ClassPath: .,
  lib/neo4j/neo4j-udc-1.9.2.jar,
  lib/neo4j/org.apache.servicemix.bundles.jline-0.9.94_1.jar,
  lib/neo4j/scala-library-2.10.0.jar,
- lib/neo4j/server-api-1.9.2.jar,
- lib/hsqldb/hsqldb.jar
-Export-Package: lapd.databases,
- lapd.databases.hsqldb,
- lapd.databases.neo4j
+ lib/neo4j/server-api-1.9.2.jar
+Export-Package: lapd.databases.neo4j
 Require-Bundle: org.eclipse.imp.pdb.values;bundle-version="0.4.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-Vendor: wouter@wouterkwakernaak.nl

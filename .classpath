@@ -26,6 +26,5 @@
 	<classpathentry exported="true" kind="lib" path="lib/neo4j/org.apache.servicemix.bundles.jline-0.9.94_1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/neo4j/scala-library-2.10.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/neo4j/server-api-1.9.2.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/hsqldb/hsqldb.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -1,9 +1,6 @@
 package lapd.databases.neo4j;
 
-import lapd.databases.DbMappingException;
-
-
-public class GraphDbMappingException extends DbMappingException {
+public class GraphDbMappingException extends Exception {
 	
 	private static final long serialVersionUID = 3918081694038663717L;
 	
