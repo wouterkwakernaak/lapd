@@ -39,11 +39,11 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	private IValueFactory valueFactory;
 	private final GraphDatabaseService graphDb;
 	private final Index<Node> nodeIndex;
+	private String dbDirectoryPath;
 	
 	
 	private GraphDbValueIO() throws IOException {
-		String dbPath = getDbPath();
-		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath);
+		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(fetchDbPath());
 		registerShutdownHook(graphDb);
 		nodeIndex = graphDb.index().forNodes("nodes");
 		graphDbValueInsertionVisitor = new GraphDbValueInsertionVisitor(graphDb);		
@@ -53,7 +53,11 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		this.valueFactory = valueFactory;
 	}
 	
-	private String getDbPath() throws IOException {
+	public String getDbDirectoryPath() {
+		return dbDirectoryPath;
+	}	
+	
+	private String fetchDbPath() throws IOException {
 		Properties prop = new Properties();
 		InputStream stream;
 		Bundle bundle = Platform.getBundle("lapd");
@@ -63,10 +67,12 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 			stream = ClassLoader.class.getResourceAsStream("/config.properties");
 		prop.load(stream);
 		String neo4jDbName = prop.getProperty("neo4jDbName");
-		String userSpecifiedDir = prop.getProperty("databasesDirectory");
+		String userSpecifiedDir = prop.getProperty("databasesDirectory");		
 		if (userSpecifiedDir != null)
-			return userSpecifiedDir + "/" + neo4jDbName;
-		return System.getProperty("user.home") + "/databases/" + neo4jDbName;
+			dbDirectoryPath = userSpecifiedDir;
+		else
+			dbDirectoryPath = System.getProperty("user.home") + "/databases";
+		return dbDirectoryPath + "/" + neo4jDbName;
 	}
 	
 	private static void registerShutdownHook(final GraphDatabaseService graphDb)
