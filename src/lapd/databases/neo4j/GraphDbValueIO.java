@@ -113,12 +113,12 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		Node node = nodeIndex.get("id", id).getSingle();
 		if (node == null)
 			throw new GraphDbMappingException("Id not found.");
-		try {
+		//try {
 			return type.accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
-		}
-		catch (NotFoundException e) {
-			throw new GraphDbMappingException("Could not find value. The id and type probably did not match.");
-		}
+		//}
+		//catch (NotFoundException e) {
+			//throw new GraphDbMappingException("Could not find value. The id and type probably did not match.");
+		//}
 	}
 
 }

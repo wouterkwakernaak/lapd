@@ -120,6 +120,7 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 	public Node visitMap(IMap mapValue) throws GraphDbMappingException {
 		Iterator<Entry<IValue, IValue>> iterator = mapValue.entryIterator();	
 		Node referenceNode = graphDb.createNode();
+		referenceNode.setProperty(PropertyNames.TYPE, TypeNames.MAP);
 		Node previousElementNode = null;
 		if (iterator.hasNext()) {			
 			Entry<IValue, IValue> entry = iterator.next();			

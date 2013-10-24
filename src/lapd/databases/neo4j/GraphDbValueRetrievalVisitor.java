@@ -136,13 +136,13 @@ public class GraphDbValueRetrievalVisitor implements ITypeVisitor<IValue, GraphD
 			return mapWriter.done();
 		Node currentKeyNode = node.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
 		Node currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.MAP_KEY_VALUE, Direction.OUTGOING).getEndNode();
-		mapWriter.put(type.getKeyType().accept(new GraphDbValueRetrievalVisitor(currentKeyNode, valueFactory, typeStore)),
-				type.getValueType().accept(new GraphDbValueRetrievalVisitor(currentValueNode, valueFactory, typeStore)));
+		mapWriter.put(new TypeDeducer(currentKeyNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(currentKeyNode, valueFactory, typeStore)),
+				new TypeDeducer(currentValueNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(currentValueNode, valueFactory, typeStore)));
 		while (currentKeyNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_ELEMENT)) {
 			currentKeyNode = currentKeyNode.getSingleRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING).getEndNode();
 			currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.MAP_KEY_VALUE, Direction.OUTGOING).getEndNode();
-			mapWriter.put(type.getKeyType().accept(new GraphDbValueRetrievalVisitor(currentKeyNode, valueFactory, typeStore)),
-					type.getValueType().accept(new GraphDbValueRetrievalVisitor(currentValueNode, valueFactory, typeStore)));
+			mapWriter.put(new TypeDeducer(currentKeyNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(currentKeyNode, valueFactory, typeStore)),
+					new TypeDeducer(currentValueNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(currentValueNode, valueFactory, typeStore)));
 		}
 		return mapWriter.done();
 	}
@@ -184,14 +184,13 @@ public class GraphDbValueRetrievalVisitor implements ITypeVisitor<IValue, GraphD
 	}
 	
 	private List<IValue> getElementValues(Type type) throws GraphDbMappingException {
-		List<IValue> valueList = new ArrayList<IValue>();
-		Type elementType = type.getElementType();
+		List<IValue> valueList = new ArrayList<IValue>();		
 		Node currentNode = node.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
-		valueList.add(elementType.accept(new GraphDbValueRetrievalVisitor(currentNode, valueFactory, typeStore)));
+		valueList.add(new TypeDeducer(currentNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(currentNode, valueFactory, typeStore)));
 		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_ELEMENT)) {
 			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_ELEMENT, 
 					Direction.OUTGOING).getEndNode();
-			valueList.add(elementType.accept(new GraphDbValueRetrievalVisitor(currentNode, 
+			valueList.add(new TypeDeducer(currentNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(currentNode, 
 					valueFactory, typeStore)));
 		}
 		return valueList;
