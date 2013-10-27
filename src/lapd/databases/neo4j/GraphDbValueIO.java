@@ -2,6 +2,8 @@ package lapd.databases.neo4j;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.eclipse.core.runtime.FileLocator;
@@ -14,9 +16,14 @@ import org.eclipse.imp.pdb.facts.type.TypeStore;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.NotFoundException;
-import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
+import org.neo4j.helpers.collection.MapUtil;
+import org.neo4j.index.lucene.unsafe.batchinsert.LuceneBatchInserterIndexProvider;
+import org.neo4j.unsafe.batchinsert.BatchInserter;
+import org.neo4j.unsafe.batchinsert.BatchInserterIndex;
+import org.neo4j.unsafe.batchinsert.BatchInserterIndexProvider;
+import org.neo4j.unsafe.batchinsert.BatchInserters;
 import org.osgi.framework.Bundle;
 
 public class GraphDbValueIO extends AbstractGraphDbValueIO {
@@ -35,18 +42,10 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		return instance;
 	}
 	
-	private final GraphDbValueInsertionVisitor graphDbValueInsertionVisitor;
 	private IValueFactory valueFactory;
-	private final GraphDatabaseService graphDb;
-	private final Index<Node> nodeIndex;
-	private String dbDirectoryPath;
+	private String dbDirectoryPath;	
 	
-	
-	private GraphDbValueIO() throws IOException {
-		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(fetchDbPath());
-		registerShutdownHook(graphDb);
-		nodeIndex = graphDb.index().forNodes("nodes");
-		graphDbValueInsertionVisitor = new GraphDbValueInsertionVisitor(graphDb);		
+	private GraphDbValueIO() throws IOException {		
 	}
 	
 	public void init(IValueFactory valueFactory) {
@@ -84,40 +83,51 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	        }
 	    });
 	}
-	
-	public void shutdown() {
-		graphDb.shutdown();
-	}
 
 	@Override
 	public void write(String id, IValue value) throws GraphDbMappingException {
-		if (nodeIndex.get("id", id).size() != 0)
-			throw new GraphDbMappingException("Cannot write value to database. The id already exists.");
-		Transaction tx = graphDb.beginTx();
+		BatchInserter inserter = null;
+		BatchInserterIndexProvider indexProvider = null;
 		try {
-			Node node = value.accept(graphDbValueInsertionVisitor);
-			node.setProperty("id", id);
-			nodeIndex.add(node, "id", id);
-			tx.success();
-		}
-		catch (Exception e) { 
-			throw new GraphDbMappingException(e.getMessage()); 
+			inserter = BatchInserters.inserter(fetchDbPath());				
+			indexProvider = new LuceneBatchInserterIndexProvider(inserter);
+			BatchInserterIndex nodeIndex = indexProvider.nodeIndex("nodes", MapUtil.stringMap("type", "exact"));
+			if (nodeIndex.get("id", id).size() != 0)
+				throw new GraphDbMappingException("Cannot write value to database. The id already exists.");
+			Map<String, Object> properties = new HashMap<String, Object>();
+			properties.put("id", id);
+			long node = value.accept(new GraphDbValueInsertionVisitor(inserter, properties));
+			nodeIndex.add(node, properties);
+			nodeIndex.flush();
+		} catch (IOException e) {
+			throw new GraphDbMappingException("Could not open database for writing.");
 		}
 		finally {
-			tx.finish();
+			indexProvider.shutdown();
+			inserter.shutdown();
 		}
 	}
 
 	@Override
 	public IValue read(String id, Type type, TypeStore typeStore) throws GraphDbMappingException {
-		Node node = nodeIndex.get("id", id).getSingle();
-		if (node == null)
-			throw new GraphDbMappingException("Id not found.");
+		GraphDatabaseService graphDb = null;
 		try {
-			return type.accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+			graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(fetchDbPath());
+			registerShutdownHook(graphDb);
+			Index<Node> nodeIndex = graphDb.index().forNodes("nodes");
+			Node node = nodeIndex.get("id", id).getSingle();
+			if (node == null)
+				throw new GraphDbMappingException("Id not found.");
+			try {
+				return type.accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+			} catch (NotFoundException e) {
+				throw new GraphDbMappingException("Could not find value. The id and type probably did not match.");
+			}
+		} catch (IOException e) {
+			throw new GraphDbMappingException("Could not open database for reading.");
 		}
-		catch (NotFoundException e) {
-			throw new GraphDbMappingException("Could not find value. The id and type probably did not match.");
+		finally {
+			graphDb.shutdown();
 		}
 	}
 
