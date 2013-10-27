@@ -72,8 +72,7 @@ public class GraphDbValueRetrievalVisitor implements ITypeVisitor<IValue, GraphD
 	
 	@Override
 	public IValue visitDateTime(Type type) throws GraphDbMappingException {
-		// datetime deviates by one hour, hence the -3600000
-		return valueFactory.datetime((Long)node.getProperty(PropertyNames.DATE_TIME) - 3600000);
+		return valueFactory.datetime((Long)node.getProperty(PropertyNames.DATE_TIME));
 	}
 
 	@Override
