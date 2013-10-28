@@ -2,6 +2,7 @@ package lapd.databases.neo4j;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.Properties;
 
 import org.eclipse.core.runtime.FileLocator;
@@ -11,6 +12,8 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeStore;
+import org.neo4j.cypher.javacompat.ExecutionEngine;
+import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.NotFoundException;
@@ -40,10 +43,12 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	private final GraphDatabaseService graphDb;
 	private final Index<Node> nodeIndex;
 	private String dbDirectoryPath;
+	private final ExecutionEngine queryEngine;
 	
 	
 	private GraphDbValueIO() throws IOException {
 		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(fetchDbPath());
+		queryEngine = new ExecutionEngine(graphDb);
 		registerShutdownHook(graphDb);
 		nodeIndex = graphDb.index().forNodes("nodes");
 		graphDbValueInsertionVisitor = new GraphDbValueInsertionVisitor(graphDb);		
@@ -107,6 +112,14 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 			tx.finish();
 		}
 	}
+	
+	@Override
+	public IValue read(String id, TypeStore typeStore) throws GraphDbMappingException {
+		Node node = nodeIndex.get("id", id).getSingle();
+		if (node == null)
+			throw new GraphDbMappingException("Id not found.");
+		return new TypeDeducer(node, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+	}
 
 	@Override
 	public IValue read(String id, Type type, TypeStore typeStore) throws GraphDbMappingException {
@@ -119,6 +132,33 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		catch (NotFoundException e) {
 			throw new GraphDbMappingException("Could not find value. The id and type probably did not match.");
 		}
+	}
+
+	@Override
+	public IValue executeQuery(String query, TypeStore typeStore) throws GraphDbMappingException {
+		ExecutionResult result = queryEngine.execute(query);
+		Iterator<Node> n_column = result.columnAs("n");
+		if (n_column.hasNext()) {
+			Node node = n_column.next();
+			return new TypeDeducer(node, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+		}
+		throw new GraphDbMappingException("No query results were found.");
+	}	
+
+	@Override
+	public IValue executeQuery(String query, Type type, TypeStore typeStore) throws GraphDbMappingException {
+		ExecutionResult result = queryEngine.execute(query);
+		Iterator<Node> n_column = result.columnAs("n");
+		if (n_column.hasNext()) {
+			Node node = n_column.next();
+			try {
+				return type.accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+			}
+			catch (NotFoundException e) {
+				throw new GraphDbMappingException("The type probably did not match the query result.");
+			}
+		}
+		throw new GraphDbMappingException("No query results were found.");
 	}
 
 }
