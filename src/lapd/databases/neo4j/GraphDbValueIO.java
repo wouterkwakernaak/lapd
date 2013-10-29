@@ -137,10 +137,12 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	@Override
 	public IValue executeQuery(String query, TypeStore typeStore) throws GraphDbMappingException {
 		ExecutionResult result = queryEngine.execute(query);
-		Iterator<Node> n_column = result.columnAs("n");
-		if (n_column.hasNext()) {
-			Node node = n_column.next();
-			return new TypeDeducer(node, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+		if (!result.columns().isEmpty()) {
+			Iterator<Node> column = result.columnAs(result.columns().get(0));
+			if (column.hasNext()) {
+				Node node = column.next();
+				return new TypeDeducer(node, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+			}
 		}
 		throw new GraphDbMappingException("No query results were found.");
 	}	
@@ -148,14 +150,16 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	@Override
 	public IValue executeQuery(String query, Type type, TypeStore typeStore) throws GraphDbMappingException {
 		ExecutionResult result = queryEngine.execute(query);
-		Iterator<Node> n_column = result.columnAs("n");
-		if (n_column.hasNext()) {
-			Node node = n_column.next();
-			try {
-				return type.accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
-			}
-			catch (NotFoundException e) {
-				throw new GraphDbMappingException("The type probably did not match the query result.");
+		if (!result.columns().isEmpty()) {
+			Iterator<Node> column = result.columnAs(result.columns().get(0));
+			if (column.hasNext()) {
+				Node node = column.next();
+				try {
+					return type.accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+				}
+				catch (NotFoundException e) {
+					throw new GraphDbMappingException("The type probably did not match the query result.");
+				}
 			}
 		}
 		throw new GraphDbMappingException("No query results were found.");
