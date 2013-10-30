@@ -165,4 +165,10 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		throw new GraphDbMappingException("No query results were found.");
 	}
 
+	@Override
+	public boolean idExists(String id) {
+		Node node = nodeIndex.get("id", id).getSingle();
+		return node == null ? false : true;
+	}
+
 }
