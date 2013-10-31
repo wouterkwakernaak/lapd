@@ -117,7 +117,7 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	public IValue read(String id, TypeStore typeStore) throws GraphDbMappingException {
 		Node node = nodeIndex.get("id", id).getSingle();
 		if (node == null)
-			throw new GraphDbMappingException("Id not found.");
+			throw new IdNotFoundException("Id " + id + " not found.");
 		return new TypeDeducer(node, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
 	}
 
@@ -125,7 +125,7 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	public IValue read(String id, Type type, TypeStore typeStore) throws GraphDbMappingException {
 		Node node = nodeIndex.get("id", id).getSingle();
 		if (node == null)
-			throw new GraphDbMappingException("Id not found.");
+			throw new IdNotFoundException("Id " + id + " not found.");
 		try {
 			return type.accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
 		}
