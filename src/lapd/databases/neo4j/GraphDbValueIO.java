@@ -98,6 +98,10 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	public void write(String id, IValue value) throws GraphDbMappingException {
 		if (nodeIndex.get("id", id).size() != 0)
 			throw new GraphDbMappingException("Cannot write value to database. The id already exists.");
+		writeToDb(id, value);
+	}
+
+	private void writeToDb(String id, IValue value)	throws GraphDbMappingException {
 		Transaction tx = graphDb.beginTx();
 		try {
 			Node node = value.accept(graphDbValueInsertionVisitor);
@@ -110,6 +114,16 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		}
 		finally {
 			tx.finish();
+		}
+	}
+	
+	@Override
+	public void write(String id, IValue value, boolean deleteOld) throws GraphDbMappingException {
+		if (!deleteOld)
+			write(id, value);
+		else {
+			queryEngine.execute("start n=node:nodes(id = '" + id + "') match n-[r]-() delete n, r");
+			writeToDb(id, value);
 		}
 	}
 	
