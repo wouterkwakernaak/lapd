@@ -12,7 +12,7 @@ Out of the box the database files get stored in the databases directory of your 
 
 See https://github.com/wouterkwakernaak/lapd-test
 
-1. Setup a rascal development environment, see https://github.com/cwi-swat/rascal/wiki/Rascal-Developers-Setup---Step-by-Step. Clone the rascal fork found at https://github.com/wouterkwakernaak/rascal instead of the main version.
+1. Setup a rascal development environment, see https://github.com/cwi-swat/rascal/wiki/Rascal-Developers-Setup---Step-by-Step. Clone the rascal and rascal-eclipse forks found at https://github.com/wouterkwakernaak?tab=repositories instead of the main versions.
 2. Clone lapd and lapd-test
 3. Import all projects into Eclipse
 4. Run rascal-eclipse as an Eclipse Application
