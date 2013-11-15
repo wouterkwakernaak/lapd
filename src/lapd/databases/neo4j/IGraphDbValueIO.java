@@ -7,7 +7,7 @@ import org.eclipse.imp.pdb.facts.type.TypeStore;
 public interface IGraphDbValueIO {
 	
 	public void write(String id, IValue value) throws GraphDbMappingException;
-	void write(String id, IValue value, boolean deleteOld) throws GraphDbMappingException;
+	public void write(String id, IValue value, boolean deleteOld) throws GraphDbMappingException;
 	public IValue read(String id) throws GraphDbMappingException;
 	public IValue read(String id, TypeStore typeStore) throws GraphDbMappingException;
 	public IValue read(String id, Type type) throws GraphDbMappingException;
