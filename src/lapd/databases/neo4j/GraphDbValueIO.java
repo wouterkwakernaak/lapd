@@ -2,7 +2,9 @@ package lapd.databases.neo4j;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 
 import org.eclipse.core.runtime.FileLocator;
@@ -47,7 +49,15 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	
 	
 	private GraphDbValueIO() throws IOException {
-		graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(fetchDbPath());
+		Map<String, String> config = new HashMap<String, String>();
+		config.put("cache_type", "none");
+		config.put("use_memory_mapped_buffers", "false");
+		config.put("neostore.nodestore.db.mapped_memory", "0M");
+		config.put("neostore.relationshipstore.db.mapped_memory", "0M");
+		config.put("neostore.propertystore.db.mapped_memory", "0M");
+		config.put("neostore.propertystore.db.strings.mapped_memory", "0M");
+		config.put("neostore.propertystore.db.arrays.mapped_memory", "0M");
+		graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(fetchDbPath()).setConfig(config).newGraphDatabase();
 		queryEngine = new ExecutionEngine(graphDb);
 		registerShutdownHook(graphDb);
 		nodeIndex = graphDb.index().forNodes("nodes");
