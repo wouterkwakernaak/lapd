@@ -51,11 +51,12 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	private GraphDbValueIO() throws IOException {
 		Map<String, String> config = new HashMap<String, String>();
 		config.put("cache_type", "none");
-		config.put("use_memory_mapped_buffers", "false");
-		config.put("neostore.nodestore.db.mapped_memory", "0M");
-		config.put("neostore.relationshipstore.db.mapped_memory", "0M");
-		config.put("neostore.propertystore.db.mapped_memory", "0M");
-		config.put("neostore.propertystore.db.strings.mapped_memory", "0M");
+		config.put("use_memory_mapped_buffers", "true");
+		config.put("logical_log_rotation_threshold", "500M");
+		config.put("neostore.nodestore.db.mapped_memory", "100M");
+		config.put("neostore.relationshipstore.db.mapped_memory", "100M");
+		config.put("neostore.propertystore.db.mapped_memory", "100M");
+		config.put("neostore.propertystore.db.strings.mapped_memory", "100M");
 		config.put("neostore.propertystore.db.arrays.mapped_memory", "0M");
 		graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(fetchDbPath()).setConfig(config).newGraphDatabase();
 		queryEngine = new ExecutionEngine(graphDb);
@@ -106,8 +107,8 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 
 	@Override
 	public void write(String id, IValue value) throws GraphDbMappingException {
-		if (nodeIndex.get("id", id).size() != 0)
-			throw new GraphDbMappingException("Cannot write value to database. The id already exists.");
+		//if (nodeIndex.get("id", id).size() != 0)
+			//throw new GraphDbMappingException("Cannot write value to database. The id already exists.");
 		writeToDb(id, value);
 	}
 
