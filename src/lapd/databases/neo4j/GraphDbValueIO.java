@@ -46,10 +46,10 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	}
 	
 	private IValueFactory valueFactory;
-	private final GraphDatabaseService graphDb;
-	private final Index<Node> nodeIndex;
+	private GraphDatabaseService graphDb;
+	private Index<Node> nodeIndex;
 	private String dbDirectoryPath;
-	private final ExecutionEngine queryEngine;	
+	private ExecutionEngine queryEngine;	
 	
 	private GraphDbValueIO() throws IOException {
 		Map<String, String> config = new HashMap<String, String>();
@@ -61,10 +61,10 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		config.put("neostore.propertystore.db.mapped_memory", "100M");
 		config.put("neostore.propertystore.db.strings.mapped_memory", "100M");
 		config.put("neostore.propertystore.db.arrays.mapped_memory", "0M");
-		graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(fetchDbPath()).setConfig(config).newGraphDatabase();
-		queryEngine = new ExecutionEngine(graphDb);
-		registerShutdownHook(graphDb);
-		nodeIndex = graphDb.index().forNodes("nodes");
+		//graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(fetchDbPath()).setConfig(config).newGraphDatabase();
+		//queryEngine = new ExecutionEngine(graphDb);
+		//registerShutdownHook(graphDb);
+		//nodeIndex = graphDb.index().forNodes("nodes");
 	}
 	
 	public void init(IValueFactory valueFactory) {
