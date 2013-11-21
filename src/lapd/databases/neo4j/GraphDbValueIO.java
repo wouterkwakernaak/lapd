@@ -3,6 +3,7 @@ package lapd.databases.neo4j;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -13,6 +14,8 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeStore;
+import org.neo4j.cypher.javacompat.ExecutionEngine;
+import org.neo4j.cypher.javacompat.ExecutionResult;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.NotFoundException;
@@ -43,9 +46,25 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	}
 	
 	private IValueFactory valueFactory;
-	private String dbDirectoryPath;	
+	private final GraphDatabaseService graphDb;
+	private final Index<Node> nodeIndex;
+	private String dbDirectoryPath;
+	private final ExecutionEngine queryEngine;	
 	
-	private GraphDbValueIO() throws IOException {		
+	private GraphDbValueIO() throws IOException {
+		Map<String, String> config = new HashMap<String, String>();
+		config.put("cache_type", "none");
+		config.put("use_memory_mapped_buffers", "true");
+		config.put("logical_log_rotation_threshold", "500M");
+		config.put("neostore.nodestore.db.mapped_memory", "100M");
+		config.put("neostore.relationshipstore.db.mapped_memory", "100M");
+		config.put("neostore.propertystore.db.mapped_memory", "100M");
+		config.put("neostore.propertystore.db.strings.mapped_memory", "100M");
+		config.put("neostore.propertystore.db.arrays.mapped_memory", "0M");
+		graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(fetchDbPath()).setConfig(config).newGraphDatabase();
+		queryEngine = new ExecutionEngine(graphDb);
+		registerShutdownHook(graphDb);
+		nodeIndex = graphDb.index().forNodes("nodes");
 	}
 	
 	public void init(IValueFactory valueFactory) {
@@ -107,6 +126,24 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 			inserter.shutdown();
 		}
 	}
+	
+	@Override
+	public void write(String id, IValue value, boolean deleteOld) throws GraphDbMappingException {
+		if (!deleteOld)
+			write(id, value);
+		else {
+			queryEngine.execute("start n=node:nodes(id = '" + id + "') match n-[r]-() delete n, r");
+			write(id, value);
+		}
+	}
+	
+	@Override
+	public IValue read(String id, TypeStore typeStore) throws GraphDbMappingException {
+		Node node = nodeIndex.get("id", id).getSingle();
+		if (node == null)
+			throw new IdNotFoundException("Id " + id + " not found.");
+		return new TypeDeducer(node, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+	}
 
 	@Override
 	public IValue read(String id, Type type, TypeStore typeStore) throws GraphDbMappingException {
@@ -129,6 +166,43 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		finally {
 			graphDb.shutdown();
 		}
+	}
+
+	@Override
+	public IValue executeQuery(String query, TypeStore typeStore) throws GraphDbMappingException {
+		ExecutionResult result = queryEngine.execute(query);
+		if (!result.columns().isEmpty()) {
+			Iterator<Node> column = result.columnAs(result.columns().get(0));
+			if (column.hasNext()) {
+				Node node = column.next();
+				return new TypeDeducer(node, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+			}
+		}
+		throw new GraphDbMappingException("No query results were found.");
+	}	
+
+	@Override
+	public IValue executeQuery(String query, Type type, TypeStore typeStore) throws GraphDbMappingException {
+		ExecutionResult result = queryEngine.execute(query);
+		if (!result.columns().isEmpty()) {
+			Iterator<Node> column = result.columnAs(result.columns().get(0));
+			if (column.hasNext()) {
+				Node node = column.next();
+				try {
+					return type.accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+				}
+				catch (NotFoundException e) {
+					throw new GraphDbMappingException("The type probably did not match the query result.");
+				}
+			}
+		}
+		throw new GraphDbMappingException("No query results were found.");
+	}
+
+	@Override
+	public boolean idExists(String id) {
+		Node node = nodeIndex.get("id", id).getSingle();
+		return node == null ? false : true;
 	}
 
 }
