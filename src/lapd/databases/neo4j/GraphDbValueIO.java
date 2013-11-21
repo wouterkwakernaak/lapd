@@ -67,11 +67,12 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		config.put("neostore.propertystore.db.arrays.mapped_memory", "0M");
 		//graphDb = new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(fetchDbPath()).setConfig(config).newGraphDatabase();
 		//queryEngine = new ExecutionEngine(graphDb);
-		//registerShutdownHook(graphDb);
+		
 		//nodeIndex = graphDb.index().forNodes("nodes");
 		inserter = BatchInserters.inserter(fetchDbPath(), config);				
 		indexProvider = new LuceneBatchInserterIndexProvider(inserter);
 		nodeIndex = indexProvider.nodeIndex("nodes", MapUtil.stringMap("type", "exact"));
+		registerShutdownHook(inserter, indexProvider);
 	}
 	
 	public void init(IValueFactory valueFactory) {
@@ -100,15 +101,16 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		return dbDirectoryPath + "/" + neo4jDbName;
 	}
 	
-//	private static void registerShutdownHook(final GraphDatabaseService graphDb)
-//	{
-//	    Runtime.getRuntime().addShutdownHook(new Thread() {
-//	        @Override
-//	        public void run() {
-//	            graphDb.shutdown();
-//	        }
-//	    });
-//	}
+	private static void registerShutdownHook(final BatchInserter inserter, final BatchInserterIndexProvider indexProvider)
+	{
+	    Runtime.getRuntime().addShutdownHook(new Thread() {
+	        @Override
+	        public void run() {
+	        	indexProvider.shutdown();
+	            inserter.shutdown();
+	        }
+	    });
+	}
 
 	@Override
 	public void write(String id, IValue value) throws GraphDbMappingException {
@@ -127,11 +129,6 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 			//indexProvider.shutdown();
 			//inserter.shutdown();
 		}
-	}
-	
-	public void shutDownBatchInserter() {
-		indexProvider.shutdown();
-		inserter.shutdown();
 	}
 	
 	@Override
