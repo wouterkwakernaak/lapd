@@ -69,7 +69,7 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		//queryEngine = new ExecutionEngine(graphDb);
 		//registerShutdownHook(graphDb);
 		//nodeIndex = graphDb.index().forNodes("nodes");
-		inserter = BatchInserters.inserter(fetchDbPath());				
+		inserter = BatchInserters.inserter(fetchDbPath(), config);				
 		indexProvider = new LuceneBatchInserterIndexProvider(inserter);
 		nodeIndex = indexProvider.nodeIndex("nodes", MapUtil.stringMap("type", "exact"));
 	}
