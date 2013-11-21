@@ -46,10 +46,14 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	}
 	
 	private IValueFactory valueFactory;
-	private GraphDatabaseService graphDb;
-	private Index<Node> nodeIndex;
+	//private GraphDatabaseService graphDb;
+	//private Index<Node> nodeIndex;
 	private String dbDirectoryPath;
-	private ExecutionEngine queryEngine;	
+	//private ExecutionEngine queryEngine;
+	
+	private final BatchInserter inserter;
+	private final BatchInserterIndexProvider indexProvider;
+	private final BatchInserterIndex nodeIndex;
 	
 	private GraphDbValueIO() throws IOException {
 		Map<String, String> config = new HashMap<String, String>();
@@ -65,6 +69,9 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		//queryEngine = new ExecutionEngine(graphDb);
 		//registerShutdownHook(graphDb);
 		//nodeIndex = graphDb.index().forNodes("nodes");
+		inserter = BatchInserters.inserter(fetchDbPath());				
+		indexProvider = new LuceneBatchInserterIndexProvider(inserter);
+		nodeIndex = indexProvider.nodeIndex("nodes", MapUtil.stringMap("type", "exact"));
 	}
 	
 	public void init(IValueFactory valueFactory) {
@@ -93,32 +100,27 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		return dbDirectoryPath + "/" + neo4jDbName;
 	}
 	
-	private static void registerShutdownHook(final GraphDatabaseService graphDb)
-	{
-	    Runtime.getRuntime().addShutdownHook(new Thread() {
-	        @Override
-	        public void run() {
-	            graphDb.shutdown();
-	        }
-	    });
-	}
+//	private static void registerShutdownHook(final GraphDatabaseService graphDb)
+//	{
+//	    Runtime.getRuntime().addShutdownHook(new Thread() {
+//	        @Override
+//	        public void run() {
+//	            graphDb.shutdown();
+//	        }
+//	    });
+//	}
 
 	@Override
 	public void write(String id, IValue value) throws GraphDbMappingException {
-		BatchInserter inserter = null;
-		BatchInserterIndexProvider indexProvider = null;
 		try {
-			inserter = BatchInserters.inserter(fetchDbPath());				
-			indexProvider = new LuceneBatchInserterIndexProvider(inserter);
-			BatchInserterIndex nodeIndex = indexProvider.nodeIndex("nodes", MapUtil.stringMap("type", "exact"));
-			if (nodeIndex.get("id", id).size() != 0)
-				throw new GraphDbMappingException("Cannot write value to database. The id already exists.");
+//			if (nodeIndex.get("id", id).size() != 0)
+//				throw new GraphDbMappingException("Cannot write value to database. The id already exists.");
 			Map<String, Object> properties = new HashMap<String, Object>();
 			properties.put("id", id);
 			long node = value.accept(new GraphDbValueInsertionVisitor(inserter, properties));
 			nodeIndex.add(node, properties);
 			nodeIndex.flush();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			throw new GraphDbMappingException("Could not open database for writing.");
 		}
 		finally {
@@ -129,79 +131,83 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	
 	@Override
 	public void write(String id, IValue value, boolean deleteOld) throws GraphDbMappingException {
-		if (!deleteOld)
-			write(id, value);
-		else {
-			queryEngine.execute("start n=node:nodes(id = '" + id + "') match n-[r]-() delete n, r");
-			write(id, value);
-		}
+//		if (!deleteOld)
+//			write(id, value);
+//		else {
+//			queryEngine.execute("start n=node:nodes(id = '" + id + "') match n-[r]-() delete n, r");
+//			write(id, value);
+//		}
 	}
 	
 	@Override
 	public IValue read(String id, TypeStore typeStore) throws GraphDbMappingException {
-		Node node = nodeIndex.get("id", id).getSingle();
-		if (node == null)
-			throw new IdNotFoundException("Id " + id + " not found.");
-		return new TypeDeducer(node, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+//		Node node = nodeIndex.get("id", id).getSingle();
+//		if (node == null)
+//			throw new IdNotFoundException("Id " + id + " not found.");
+//		return new TypeDeducer(node, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+		return null;
 	}
 
 	@Override
 	public IValue read(String id, Type type, TypeStore typeStore) throws GraphDbMappingException {
-		GraphDatabaseService graphDb = null;
-		try {
-			graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(fetchDbPath());
-			registerShutdownHook(graphDb);
-			Index<Node> nodeIndex = graphDb.index().forNodes("nodes");
-			Node node = nodeIndex.get("id", id).getSingle();
-			if (node == null)
-				throw new GraphDbMappingException("Id not found.");
-			try {
-				return type.accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
-			} catch (NotFoundException e) {
-				throw new GraphDbMappingException("Could not find value. The id and type probably did not match.");
-			}
-		} catch (IOException e) {
-			throw new GraphDbMappingException("Could not open database for reading.");
-		}
-		finally {
-			graphDb.shutdown();
-		}
+//		GraphDatabaseService graphDb = null;
+//		try {
+//			graphDb = new GraphDatabaseFactory().newEmbeddedDatabase(fetchDbPath());
+//			registerShutdownHook(graphDb);
+//			Index<Node> nodeIndex = graphDb.index().forNodes("nodes");
+//			Node node = nodeIndex.get("id", id).getSingle();
+//			if (node == null)
+//				throw new GraphDbMappingException("Id not found.");
+//			try {
+//				return type.accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+//			} catch (NotFoundException e) {
+//				throw new GraphDbMappingException("Could not find value. The id and type probably did not match.");
+//			}
+//		} catch (IOException e) {
+//			throw new GraphDbMappingException("Could not open database for reading.");
+//		}
+//		finally {
+//			graphDb.shutdown();
+//		}
+		return null;
 	}
 
 	@Override
 	public IValue executeQuery(String query, TypeStore typeStore) throws GraphDbMappingException {
-		ExecutionResult result = queryEngine.execute(query);
-		if (!result.columns().isEmpty()) {
-			Iterator<Node> column = result.columnAs(result.columns().get(0));
-			if (column.hasNext()) {
-				Node node = column.next();
-				return new TypeDeducer(node, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
-			}
-		}
-		throw new GraphDbMappingException("No query results were found.");
+//		ExecutionResult result = queryEngine.execute(query);
+//		if (!result.columns().isEmpty()) {
+//			Iterator<Node> column = result.columnAs(result.columns().get(0));
+//			if (column.hasNext()) {
+//				Node node = column.next();
+//				return new TypeDeducer(node, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+//			}
+//		}
+//		throw new GraphDbMappingException("No query results were found.");
+		return null;
 	}	
 
 	@Override
 	public IValue executeQuery(String query, Type type, TypeStore typeStore) throws GraphDbMappingException {
-		ExecutionResult result = queryEngine.execute(query);
-		if (!result.columns().isEmpty()) {
-			Iterator<Node> column = result.columnAs(result.columns().get(0));
-			if (column.hasNext()) {
-				Node node = column.next();
-				try {
-					return type.accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
-				}
-				catch (NotFoundException e) {
-					throw new GraphDbMappingException("The type probably did not match the query result.");
-				}
-			}
-		}
-		throw new GraphDbMappingException("No query results were found.");
+//		ExecutionResult result = queryEngine.execute(query);
+//		if (!result.columns().isEmpty()) {
+//			Iterator<Node> column = result.columnAs(result.columns().get(0));
+//			if (column.hasNext()) {
+//				Node node = column.next();
+//				try {
+//					return type.accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+//				}
+//				catch (NotFoundException e) {
+//					throw new GraphDbMappingException("The type probably did not match the query result.");
+//				}
+//			}
+//		}
+//		throw new GraphDbMappingException("No query results were found.");
+		return null;
 	}
 
 	@Override
 	public boolean idExists(String id) {
-		Node node = nodeIndex.get("id", id).getSingle();
+		Long node = nodeIndex.get("id", id).getSingle();
 		return node == null ? false : true;
 	}
 
