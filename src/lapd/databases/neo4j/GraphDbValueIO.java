@@ -124,9 +124,14 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 			throw new GraphDbMappingException("Could not open database for writing.");
 		}
 		finally {
-			indexProvider.shutdown();
-			inserter.shutdown();
+			//indexProvider.shutdown();
+			//inserter.shutdown();
 		}
+	}
+	
+	public void shutDownBatchInserter() {
+		indexProvider.shutdown();
+		inserter.shutdown();
 	}
 	
 	@Override
