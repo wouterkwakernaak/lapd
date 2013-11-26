@@ -12,10 +12,8 @@ public interface IGraphDbValueIO {
 	public IValue read(String id, TypeStore typeStore) throws GraphDbMappingException;
 	public IValue read(String id, Type type) throws GraphDbMappingException;
 	public IValue read(String id, Type type, TypeStore typeStore) throws GraphDbMappingException;
-	public IValue executeQuery(String query) throws GraphDbMappingException;
-	public IValue executeQuery(String query, TypeStore typeStore) throws GraphDbMappingException;
-	public IValue executeQuery(String query, Type type) throws GraphDbMappingException;
-	public IValue executeQuery(String query, Type type, TypeStore typeStore) throws GraphDbMappingException;
+	public IValue executeQuery(String query, Type type, boolean isCollection) throws GraphDbMappingException;
+	public IValue executeQuery(String query, Type type, TypeStore typeStore, boolean isCollection) throws GraphDbMappingException;
 	public boolean idExists(String id);	
 
 }

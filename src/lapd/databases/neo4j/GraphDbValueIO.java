@@ -2,8 +2,10 @@ package lapd.databases.neo4j;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -50,7 +52,7 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	
 	private GraphDbValueIO() throws IOException {
 		Map<String, String> config = new HashMap<String, String>();
-		config.put("cache_type", "none");
+		config.put("cache_type", "soft");
 		config.put("use_memory_mapped_buffers", "true");
 		config.put("logical_log_rotation_threshold", "500M");
 		config.put("neostore.nodestore.db.mapped_memory", "100M");
@@ -160,24 +162,20 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	}
 
 	@Override
-	public IValue executeQuery(String query, TypeStore typeStore) throws GraphDbMappingException {
+	public IValue executeQuery(String query, Type type, TypeStore typeStore, boolean isCollection) throws GraphDbMappingException {
 		ExecutionResult result = queryEngine.execute(query);
 		if (!result.columns().isEmpty()) {
 			Iterator<Node> column = result.columnAs(result.columns().get(0));
-			if (column.hasNext()) {
-				Node node = column.next();
-				return new TypeDeducer(node, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+			if (isCollection) {				
+				List<IValue> resultsList = new ArrayList<IValue>();			
+				while (column.hasNext()) {
+					Node node = column.next();					
+					IValue value = type.getElementType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
+					resultsList.add(value);
+				}
+				return valueFactory.list(resultsList.toArray(new IValue[resultsList.size()]));
 			}
-		}
-		throw new GraphDbMappingException("No query results were found.");
-	}	
-
-	@Override
-	public IValue executeQuery(String query, Type type, TypeStore typeStore) throws GraphDbMappingException {
-		ExecutionResult result = queryEngine.execute(query);
-		if (!result.columns().isEmpty()) {
-			Iterator<Node> column = result.columnAs(result.columns().get(0));
-			if (column.hasNext()) {
+			else if (column.hasNext()) {
 				Node node = column.next();
 				try {
 					return type.accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));

@@ -17,13 +17,8 @@ public abstract class AbstractGraphDbValueIO implements IGraphDbValueIO {
 	}
 	
 	@Override
-	public IValue executeQuery(String query) throws GraphDbMappingException {
-		return executeQuery(query, new TypeStore());
-	}
-	
-	@Override
-	public IValue executeQuery(String query, Type type) throws GraphDbMappingException {
-		return executeQuery(query, type, new TypeStore());
+	public IValue executeQuery(String query, Type type, boolean isCollection) throws GraphDbMappingException {
+		return executeQuery(query, type, new TypeStore(), isCollection);
 	}
 	
 }
