@@ -12,6 +12,7 @@ import java.util.Properties;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.type.Type;
@@ -192,6 +193,16 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	public boolean idExists(String id) {
 		Node node = nodeIndex.get("id", id).getSingle();
 		return node == null ? false : true;
+	}
+
+	@Override
+	public ISet executeJavaQuery(int queryId, String graphId) throws GraphDbMappingException {
+		switch(queryId) {
+			case 1: return Queries.recursiveMethods(nodeIndex.get("id", graphId).getSingle(), valueFactory);
+			case 2: return null;
+			case 3: return null;
+			default: throw new GraphDbMappingException("Unknown query id.");
+		}
 	}
 
 }
