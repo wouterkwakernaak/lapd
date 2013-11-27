@@ -20,13 +20,16 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.index.Index;
 
 public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDbMappingException> {
 
 	private GraphDatabaseService graphDb;
+	private final Index<Node> nodeIndex;
 	
-	public GraphDbValueInsertionVisitor(GraphDatabaseService graphDb) {
-		this.graphDb = graphDb;	
+	public GraphDbValueInsertionVisitor(GraphDatabaseService graphDb, Index<Node> nodeIndex) {
+		this.graphDb = graphDb;
+		this.nodeIndex = nodeIndex;
 	}
 	
 	@Override
@@ -189,6 +192,7 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 			throws GraphDbMappingException {
 		Node node = createIterableNodeCollection(nodeValue.getChildren().iterator());
 		node.setProperty(PropertyNames.NODE, nodeValue.getName());
+		nodeIndex.add(node, PropertyNames.NODE, nodeValue.getName());
 		for (Entry<String, IValue> annotation : nodeValue.asAnnotatable().getAnnotations().entrySet()) {
 			Node annotationNode = annotation.getValue().accept(this);
 			annotationNode.setProperty(PropertyNames.ANNOTATION, annotation.getKey());

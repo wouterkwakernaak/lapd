@@ -65,7 +65,7 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		queryEngine = new ExecutionEngine(graphDb);
 		registerShutdownHook(graphDb);
 		nodeIndex = graphDb.index().forNodes("nodes");
-		graphDbValueInsertionVisitor = new GraphDbValueInsertionVisitor(graphDb);		
+		graphDbValueInsertionVisitor = new GraphDbValueInsertionVisitor(graphDb, nodeIndex);		
 	}
 	
 	public void init(IValueFactory valueFactory) {
