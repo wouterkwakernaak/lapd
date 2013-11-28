@@ -9,10 +9,13 @@ import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.IValueFactory;
 import org.eclipse.imp.pdb.facts.io.IValueTextReader;
 import org.eclipse.imp.pdb.facts.io.StandardTextReader;
+import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
+import org.eclipse.imp.pdb.facts.type.TypeStore;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.index.Index;
 
 // Predefined java traversals
 public class Queries {
@@ -44,6 +47,27 @@ public class Queries {
 				}
 			}
 			node = node.getSingleRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING).getEndNode();
+		}
+		return valueFactory.set(resultsList.toArray(new IValue[resultsList.size()]));
+	}
+	
+	public static ISet switchNoDefault(Index<Node> nodeIndex, IValueFactory valueFactory, Type type, TypeStore typeStore) throws GraphDbMappingException {
+		List<IValue> resultsList = new ArrayList<IValue>();	
+		for (Node switchRefNode : nodeIndex.get("node", "switch")) {
+			Node switchHead = switchRefNode.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
+			Node switchBodyRefNode = switchHead.getSingleRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING).getEndNode();
+			Node switchBodyHead = switchBodyRefNode.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
+			Node statement = switchBodyHead;
+			boolean hasDefaultCase = false;
+			while (statement.hasRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING)) {
+				if(statement.getProperty("node").toString().equals("defaultCase")) {
+					hasDefaultCase = true;
+					break;
+				}
+				statement = statement.getSingleRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING).getEndNode();
+			}
+			if (!hasDefaultCase)
+				resultsList.add(type.accept(new GraphDbValueRetrievalVisitor(statement, valueFactory, typeStore)));
 		}
 		return valueFactory.set(resultsList.toArray(new IValue[resultsList.size()]));
 	}
