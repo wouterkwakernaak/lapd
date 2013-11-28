@@ -20,7 +20,6 @@ import org.neo4j.graphdb.index.Index;
 // Predefined java traversals
 public class Queries {
 	
-	// Assumes the startnode is a referencenode for a M3 model
 	public static ISet recursiveMethods(Node startNode, IValueFactory valueFactory) throws GraphDbMappingException {
 		List<IValue> resultsList = new ArrayList<IValue>();	
 		Node node = null;
@@ -51,25 +50,37 @@ public class Queries {
 		return valueFactory.set(resultsList.toArray(new IValue[resultsList.size()]));
 	}
 	
-	public static ISet switchNoDefault(Index<Node> nodeIndex, IValueFactory valueFactory, Type type, TypeStore typeStore) throws GraphDbMappingException {
+	public static ISet switchNoDefault(Index<Node> index, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {
 		List<IValue> resultsList = new ArrayList<IValue>();	
-		for (Node switchRefNode : nodeIndex.get("node", "switch")) {
-			Node switchHead = switchRefNode.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
-			Node switchBodyRefNode = switchHead.getSingleRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING).getEndNode();
-			Node switchBodyHead = switchBodyRefNode.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
-			Node statement = switchBodyHead;
-			boolean hasDefaultCase = false;
-			while (statement.hasRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING)) {
-				if(statement.getProperty("node").toString().equals("defaultCase")) {
-					hasDefaultCase = true;
-					break;
+		for (Node switchRefNode : index.get("node", "switch")) {
+			Node switchHead = getHead(switchRefNode);
+			Node switchBodyRefNode = getNextEle(switchHead);
+			if (switchBodyRefNode.hasRelationship(RelTypes.HEAD, Direction.OUTGOING)) { // switch contains statements
+				Node switchBodyHead = getHead(switchBodyRefNode);
+				Node statement = switchBodyHead;
+				boolean hasDefaultCase = false;
+				while (statement.hasRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING)) {
+					if(statement.getProperty("node").toString().equals("defaultCase")) {
+						hasDefaultCase = true;
+						break;
+					}
+					statement = getNextEle(statement);
 				}
-				statement = statement.getSingleRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING).getEndNode();
+				if (!hasDefaultCase)
+					resultsList.add(type.accept(new GraphDbValueRetrievalVisitor(switchRefNode, vf, ts)));
 			}
-			if (!hasDefaultCase)
-				resultsList.add(type.accept(new GraphDbValueRetrievalVisitor(statement, valueFactory, typeStore)));
+			else
+				resultsList.add(type.accept(new GraphDbValueRetrievalVisitor(switchRefNode, vf, ts)));
 		}
-		return valueFactory.set(resultsList.toArray(new IValue[resultsList.size()]));
+		return vf.set(resultsList.toArray(new IValue[resultsList.size()]));
+	}
+	
+	private static Node getHead(Node node) {
+		return node.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
+	}
+	
+	private static Node getNextEle(Node node) {
+		return node.getSingleRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING).getEndNode();
 	}
 
 }
