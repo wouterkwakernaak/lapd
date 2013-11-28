@@ -110,8 +110,8 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 
 	@Override
 	public void write(String id, IValue value) throws GraphDbMappingException {
-		//if (nodeIndex.get("id", id).size() != 0)
-			//throw new GraphDbMappingException("Cannot write value to database. The id already exists.");
+		if (nodeIndex.get("id", id).size() != 0)
+			throw new GraphDbMappingException("Cannot write value to database. The id already exists.");
 		writeToDb(id, value);
 	}
 
@@ -198,7 +198,7 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	@Override
 	public ISet executeJavaQuery(int queryId, String graphId, Type type, TypeStore typeStore) throws GraphDbMappingException {
 		switch(queryId) {
-			case 1: return Queries.recursiveMethods(nodeIndex.get("id", graphId).getSingle(), valueFactory);
+			case 1: return Queries.recursiveMethods(nodeIndex.get("id", graphId).getSingle(), valueFactory, type.getElementType(), typeStore);
 			case 2: return Queries.switchNoDefault(nodeIndex, valueFactory, type.getElementType(), typeStore);
 			case 3: return null;
 			default: throw new GraphDbMappingException("Unknown query id.");
