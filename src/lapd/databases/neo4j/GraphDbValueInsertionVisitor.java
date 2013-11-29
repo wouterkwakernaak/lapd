@@ -21,15 +21,18 @@ import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.neo4j.unsafe.batchinsert.BatchInserter;
+import org.neo4j.unsafe.batchinsert.BatchInserterIndex;
 
 public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDbMappingException> {
 
 	private final BatchInserter inserter;
 	private Map<String, Object> predefinedProperties;
+	private final BatchInserterIndex nodeIndex;
 	
-	public GraphDbValueInsertionVisitor(BatchInserter inserter, Map<String, Object> predefinedProperties) {
+	public GraphDbValueInsertionVisitor(BatchInserter inserter, Map<String, Object> predefinedProperties, BatchInserterIndex nodeIndex) {
 		this.inserter = inserter;
 		this.predefinedProperties = predefinedProperties;
+		this.nodeIndex = nodeIndex;
 	}
 	
 	@Override
@@ -201,14 +204,15 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 	private Long createAnnotatableNode(INode nodeValue, String typeName, Map<String, Object> properties) 
 			throws GraphDbMappingException {
 		properties.put(PropertyNames.NODE, nodeValue.getName());
-		properties.put(PropertyNames.TYPE, typeName);
+		properties.put(PropertyNames.TYPE, typeName);		
 		long node = createIterableNodeCollection(nodeValue.getChildren().iterator(), properties);
 		for (Entry<String, IValue> annotation : nodeValue.asAnnotatable().getAnnotations().entrySet()) {
 			Map<String, Object> annotationProperties = new HashMap<String, Object>();
 			annotationProperties.put(PropertyNames.ANNOTATION, annotation.getKey());
-			long annotationNode = annotation.getValue().accept(new GraphDbValueInsertionVisitor(inserter, annotationProperties));
+			long annotationNode = annotation.getValue().accept(new GraphDbValueInsertionVisitor(inserter, annotationProperties, nodeIndex));
 			inserter.createRelationship(node, annotationNode, RelTypes.ANNOTATION, null);
 		}
+		nodeIndex.add(node, properties);
 		return node;
 	}
 	
