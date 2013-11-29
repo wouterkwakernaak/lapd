@@ -241,9 +241,10 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 	
 	private Map<String, Object> createPropertyMap(IValue value) {
 		Map<String, Object> properties = new HashMap<String, Object>();
-		if (rootNode) {
-			for (Entry<String, Object> property : predefinedProperties.entrySet())
-				properties.put(property.getKey(), property.getValue());
+		for (Entry<String, Object> property : predefinedProperties.entrySet()) {
+			if (!rootNode && property.getKey().equals("id"))
+				continue;
+			properties.put(property.getKey(), property.getValue());
 		}
 		return properties;
 	}
