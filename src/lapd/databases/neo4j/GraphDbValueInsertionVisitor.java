@@ -28,11 +28,13 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 	private final BatchInserter inserter;
 	private Map<String, Object> predefinedProperties;
 	private final BatchInserterIndex nodeIndex;
+	private boolean rootNode;
 	
-	public GraphDbValueInsertionVisitor(BatchInserter inserter, Map<String, Object> predefinedProperties, BatchInserterIndex nodeIndex) {
+	public GraphDbValueInsertionVisitor(BatchInserter inserter, Map<String, Object> predefinedProperties, BatchInserterIndex nodeIndex, boolean rootNode) {
 		this.inserter = inserter;
 		this.predefinedProperties = predefinedProperties;
 		this.nodeIndex = nodeIndex;
+		this.rootNode = rootNode;
 	}
 	
 	@Override
@@ -41,17 +43,22 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 		properties.put(PropertyNames.TYPE, TypeNames.STRING);
 		properties.put(PropertyNames.STRING, stringValue.getValue());
 		long node = inserter.createNode(properties);
+		rootNode = false;
 		return node;
 	}	
 	
 	@Override
 	public Long visitInteger(IInteger integerValue) throws GraphDbMappingException {
-		return createPrimitiveStringNode(integerValue, PropertyNames.INTEGER, TypeNames.INTEGER);
+		long node = createPrimitiveStringNode(integerValue, PropertyNames.INTEGER, TypeNames.INTEGER);
+		rootNode = false;
+		return node;
 	}
 
 	@Override
 	public Long visitReal(IReal realValue) throws GraphDbMappingException {
-		return createPrimitiveStringNode(realValue, PropertyNames.REAL, TypeNames.REAL);
+		long node = createPrimitiveStringNode(realValue, PropertyNames.REAL, TypeNames.REAL);
+		rootNode = false;
+		return node;
 	}	
 	
 	@Override
@@ -60,6 +67,7 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 		properties.put(PropertyNames.TYPE, TypeNames.BOOLEAN);
 		properties.put(PropertyNames.BOOLEAN, booleanValue.getValue());
 		long node = inserter.createNode(properties);
+		rootNode = false;
 		return node;
 	}
 
@@ -70,12 +78,15 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 		properties.put(PropertyNames.NUMERATOR, rationalValue.numerator().toString());
 		properties.put(PropertyNames.DENOMINATOR, rationalValue.denominator().toString());
 		long node = inserter.createNode(properties);
+		rootNode = false;
 		return node;
 	}
 	
 	@Override
 	public Long visitSourceLocation(ISourceLocation sourceLocationValue) throws GraphDbMappingException {
-		return createPrimitiveStringNode(sourceLocationValue, PropertyNames.SOURCE_LOCATION, TypeNames.SOURCE_LOCATION);
+		long node = createPrimitiveStringNode(sourceLocationValue, PropertyNames.SOURCE_LOCATION, TypeNames.SOURCE_LOCATION);
+		rootNode = false;
+		return node;
 	}
 	
 	@Override
@@ -84,6 +95,7 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 		properties.put(PropertyNames.TYPE, TypeNames.DATE_TIME);
 		properties.put(PropertyNames.DATE_TIME, dateTimeValue.getInstant());
 		long node = inserter.createNode(properties);
+		rootNode = false;
 		return node;
 	}
 
@@ -94,22 +106,30 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 	
 	@Override
 	public Long visitListRelation(IList listValue) throws GraphDbMappingException {		
-		return insertList(listValue);
+		long node = insertList(listValue);
+		rootNode = false;
+		return node;
 	}
 	
 	@Override
 	public Long visitSet(ISet setValue) throws GraphDbMappingException {	
-		return insertSet(setValue);
+		long node = insertSet(setValue);
+		rootNode = false;
+		return node;
 	}	
 
 	@Override
 	public Long visitRelation(ISet setValue) throws GraphDbMappingException {		
-		return insertSet(setValue);
+		long node = insertSet(setValue);
+		rootNode = false;
+		return node;
 	}
 	
 	@Override
 	public Long visitNode(INode nodeValue) throws GraphDbMappingException {
-		return createAnnotatableNode(nodeValue, TypeNames.NODE, createPropertyMap(nodeValue));
+		long node = createAnnotatableNode(nodeValue, TypeNames.NODE, createPropertyMap(nodeValue));
+		rootNode = false;
+		return node;
 	}	
 
 	@Override
@@ -117,6 +137,7 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 		Map<String, Object> properties = createPropertyMap(constructorValue);
 		properties.put(PropertyNames.ADT, constructorValue.getType().getAbstractDataType().getName());
 		long node = createAnnotatableNode(constructorValue, TypeNames.CONSTRUCTOR, properties);
+		rootNode = false;
 		return node;
 	}
 
@@ -124,7 +145,8 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 	public Long visitTuple(ITuple tupleValue) throws GraphDbMappingException {
 		Map<String, Object> properties = createPropertyMap(tupleValue);
 		properties.put(PropertyNames.TYPE, TypeNames.TUPLE);
-		long firstElementNode = createIterableNodeCollection(tupleValue.iterator(), properties);	
+		long firstElementNode = createIterableNodeCollection(tupleValue.iterator(), properties);
+		rootNode = false;
 		return firstElementNode;
 	}		
 
@@ -147,7 +169,8 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 				inserter.createRelationship(previousElementNode, currentElementNode, RelTypes.NEXT_ELEMENT, null);
 				previousElementNode = currentElementNode;
 			}
-		}	
+		}
+		rootNode = false;
 		return referenceNode;
 	}
 	
@@ -209,7 +232,7 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 		for (Entry<String, IValue> annotation : nodeValue.asAnnotatable().getAnnotations().entrySet()) {
 			Map<String, Object> annotationProperties = new HashMap<String, Object>();
 			annotationProperties.put(PropertyNames.ANNOTATION, annotation.getKey());
-			long annotationNode = annotation.getValue().accept(new GraphDbValueInsertionVisitor(inserter, annotationProperties, nodeIndex));
+			long annotationNode = annotation.getValue().accept(new GraphDbValueInsertionVisitor(inserter, annotationProperties, nodeIndex, false));
 			inserter.createRelationship(node, annotationNode, RelTypes.ANNOTATION, null);
 		}
 		nodeIndex.add(node, properties);
@@ -218,8 +241,10 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 	
 	private Map<String, Object> createPropertyMap(IValue value) {
 		Map<String, Object> properties = new HashMap<String, Object>();
-		for (Entry<String, Object> property : predefinedProperties.entrySet())
-			properties.put(property.getKey(), property.getValue());
+		if (rootNode) {
+			for (Entry<String, Object> property : predefinedProperties.entrySet())
+				properties.put(property.getKey(), property.getValue());
+		}
 		return properties;
 	}
 
