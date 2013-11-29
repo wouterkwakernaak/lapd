@@ -119,6 +119,7 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 //				throw new GraphDbMappingException("Cannot write value to database. The id already exists.");
 			Map<String, Object> properties = new HashMap<String, Object>();
 			long node = value.accept(new GraphDbValueInsertionVisitor(inserter, properties, nodeIndex, true, id));
+			properties.put("id", id);
 			nodeIndex.add(node, properties);
 			nodeIndex.flush();
 		} catch (Exception e) {
