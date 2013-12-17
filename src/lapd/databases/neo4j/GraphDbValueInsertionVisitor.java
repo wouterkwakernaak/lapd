@@ -1,5 +1,7 @@
 package lapd.databases.neo4j;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.eclipse.imp.pdb.facts.IBool;
@@ -97,7 +99,33 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 
 	@Override
 	public Node visitRelation(ISet setValue) throws GraphDbMappingException {		
-		return insertSet(setValue);
+		if (setValue.getElementType().getArity() != 2)
+			return insertSet(setValue);
+		Node referenceNode = graphDb.createNode();		
+		referenceNode.setProperty(PropertyNames.TYPE, TypeNames.RELATION);
+		Map<IValue, Node> currentNodes = new HashMap<IValue, Node>();
+		for (IValue tuple : setValue) {
+			IValue firstElement = ((ITuple)tuple).get(0);
+			IValue secondElement = ((ITuple)tuple).get(1);			
+			Node firstElementNode = null;
+			if (!currentNodes.containsKey(firstElement)) {				
+				firstElementNode = firstElement.accept(this);
+				currentNodes.put(firstElement, firstElementNode);
+				referenceNode.createRelationshipTo(firstElementNode, RelTypes.GRAPH_PART);
+			}
+			else
+				firstElementNode = currentNodes.get(firstElement);
+			if (!currentNodes.containsKey(secondElement)) {				
+				Node secondElementNode = secondElement.accept(this);
+				currentNodes.put(secondElement, secondElementNode);
+				firstElementNode.createRelationshipTo(secondElementNode, RelTypes.NEXT_ELEMENT);
+			}
+			else {
+				Node secondElementNode = currentNodes.get(secondElement);
+				firstElementNode.createRelationshipTo(secondElementNode, RelTypes.NEXT_ELEMENT);
+			}
+		}
+		return referenceNode;
 	}
 	
 	@Override

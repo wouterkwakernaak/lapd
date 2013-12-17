@@ -11,6 +11,7 @@ public class TypeNames {
 	public final static String DATE_TIME = "datetime";
 	public final static String LIST = "list";
 	public final static String SET = "set";
+	public final static String RELATION = "rel";
 	public final static String MAP = "map";
 	public final static String NODE = "node";
 	public final static String CONSTRUCTOR = "constructor";

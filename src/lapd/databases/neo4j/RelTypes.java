@@ -7,5 +7,6 @@ public enum RelTypes implements RelationshipType
     ANNOTATION,
     HEAD,
     NEXT_ELEMENT,
-    MAP_KEY_VALUE
+    MAP_KEY_VALUE,
+    GRAPH_PART
 }
