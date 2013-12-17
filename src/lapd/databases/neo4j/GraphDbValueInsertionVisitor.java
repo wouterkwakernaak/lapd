@@ -39,6 +39,7 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 		Node node = graphDb.createNode();
 		node.setProperty(PropertyNames.TYPE, TypeNames.STRING);
 		node.setProperty(PropertyNames.STRING, stringValue.getValue());
+		nodeIndex.add(node, PropertyNames.STRING, stringValue.getValue());
 		return node;
 	}
 	
