@@ -103,7 +103,7 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 		if (setValue.getElementType().getArity() != 2)
 			return insertSet(setValue);
 		Node referenceNode = graphDb.createNode();		
-		referenceNode.setProperty(PropertyNames.TYPE, TypeNames.RELATION);
+		referenceNode.setProperty(PropertyNames.TYPE, TypeNames.BINARY_RELATION);
 		Map<IValue, Node> currentNodes = new HashMap<IValue, Node>();
 		for (IValue tuple : setValue) {
 			IValue firstElement = ((ITuple)tuple).get(0);

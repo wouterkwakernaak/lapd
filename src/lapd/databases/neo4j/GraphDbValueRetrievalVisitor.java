@@ -3,8 +3,10 @@ package lapd.databases.neo4j;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.imp.pdb.facts.IMapWriter;
 import org.eclipse.imp.pdb.facts.IValue;
@@ -85,12 +87,40 @@ public class GraphDbValueRetrievalVisitor implements ITypeVisitor<IValue, GraphD
 	
 	@Override
 	public IValue visitSet(Type type) throws GraphDbMappingException {
+		if (type.isRelation() && type.getArity() == 2)
+			return reconstructBinaryRelation(type);
 		if (!hasHead())
 			return valueFactory.set(TypeFactory.getInstance().voidType());
 		List<IValue> elementList = getElementValues(type);
 		return valueFactory.set(elementList.toArray(new IValue[elementList.size()]));
 	}
 	
+	private IValue reconstructBinaryRelation(Type type) throws GraphDbMappingException {
+		Iterable<Relationship> GraphPartRels = node.getRelationships(RelTypes.GRAPH_PART, Direction.OUTGOING);
+		Set<IValue> tuples = new HashSet<IValue>();
+		for (Relationship graphPartRel : GraphPartRels) {
+			Node start = graphPartRel.getEndNode();
+			bfsTraverse(tuples, start);
+		}
+		return valueFactory.set(tuples.toArray(new IValue[tuples.size()]));
+	}
+	
+	// todo: cycle detection
+	private void bfsTraverse(Set<IValue> tuples, Node start) throws GraphDbMappingException {
+		Iterable<Relationship> rels = start.getRelationships(RelTypes.NEXT_ELEMENT, Direction.OUTGOING);
+		for (Relationship rel : rels) {
+			Node end = rel.getEndNode();
+			tuples.add(createTuple(start, end));
+			bfsTraverse(tuples, end);			
+		}
+	}
+
+	private IValue createTuple(Node start, Node end) throws GraphDbMappingException {
+		IValue arg1 = new TypeDeducer(start, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(start, valueFactory, typeStore));
+		IValue arg2 = new TypeDeducer(end, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(end, valueFactory, typeStore));
+		return valueFactory.tuple(arg1, arg2);
+	}
+
 	@Override
 	public IValue visitNode(Type type) throws GraphDbMappingException {
 		String nodeName = node.getProperty(PropertyNames.NODE).toString();

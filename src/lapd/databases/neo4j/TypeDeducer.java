@@ -1,12 +1,15 @@
 package lapd.databases.neo4j;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.type.TypeStore;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 
 // constructs rascal types based on a neo4j node
 public class TypeDeducer {
@@ -36,8 +39,22 @@ public class TypeDeducer {
 			case TypeNames.SOURCE_LOCATION: return typeFactory.sourceLocationType();
 			case TypeNames.STRING: 			return typeFactory.stringType();
 			case TypeNames.TUPLE: 			return getTupleType();
+			case TypeNames.BINARY_RELATION: return getBinaryRelType();
 			default: 						return typeFactory.valueType();
 		}
+	}
+
+	private Type getBinaryRelType() {
+		Iterator<Relationship> rels = currentNode.getRelationships(RelTypes.GRAPH_PART, Direction.OUTGOING).iterator();
+		if (!rels.hasNext())
+			return typeFactory.setType(typeFactory.voidType());
+		List<Type> argumentList = new ArrayList<Type>();
+		Relationship rel = rels.next().getEndNode().getSingleRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING);
+		currentNode = rel.getStartNode();
+		argumentList.add(getType());
+		currentNode = rel.getEndNode();
+		argumentList.add(getType());		
+		return typeFactory.relType(argumentList.toArray(new Type[argumentList.size()]));
 	}
 
 	private Type getConstructorType() {
