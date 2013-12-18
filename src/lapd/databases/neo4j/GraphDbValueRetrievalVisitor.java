@@ -100,19 +100,23 @@ public class GraphDbValueRetrievalVisitor implements ITypeVisitor<IValue, GraphD
 		Set<IValue> tuples = new HashSet<IValue>();
 		for (Relationship graphPartRel : GraphPartRels) {
 			Node start = graphPartRel.getEndNode();
-			bfsTraverse(tuples, start);
+			Set<Node> markedNodes = new HashSet<Node>();
+			dfsTraverse(start, markedNodes, tuples);
 		}
 		return valueFactory.set(tuples.toArray(new IValue[tuples.size()]));
 	}
 	
-	// todo: cycle detection
-	private void bfsTraverse(Set<IValue> tuples, Node start) throws GraphDbMappingException {
-		Iterable<Relationship> rels = start.getRelationships(RelTypes.NEXT_ELEMENT, Direction.OUTGOING);
-		for (Relationship rel : rels) {
-			Node end = rel.getEndNode();
-			tuples.add(createTuple(start, end));
-			bfsTraverse(tuples, end);			
+	private void dfsTraverse(Node start, Set<Node> markedNodes, Set<IValue> tuples) throws GraphDbMappingException {
+		if (!markedNodes.contains(start)) {
+			markedNodes.add(start);
+			Iterable<Relationship> rels = start.getRelationships(RelTypes.NEXT_ELEMENT, Direction.OUTGOING);
+			for (Relationship rel : rels) {
+				Node end = rel.getEndNode();
+				tuples.add(createTuple(start, end));
+				dfsTraverse(end, markedNodes, tuples);
+			}
 		}
+		else {}
 	}
 
 	private IValue createTuple(Node start, Node end) throws GraphDbMappingException {
