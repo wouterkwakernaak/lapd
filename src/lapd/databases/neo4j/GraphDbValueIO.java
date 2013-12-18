@@ -53,7 +53,7 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	
 	private GraphDbValueIO() throws IOException {
 		Map<String, String> config = new HashMap<String, String>();
-		config.put("cache_type", "weak");
+		config.put("cache_type", "soft");
 		config.put("use_memory_mapped_buffers", "true");
 		config.put("logical_log_rotation_threshold", "500M");
 		config.put("neostore.nodestore.db.mapped_memory", "100M");
@@ -174,7 +174,7 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 					IValue value = type.getElementType().accept(new GraphDbValueRetrievalVisitor(node, valueFactory, typeStore));
 					resultsList.add(value);
 				}
-				return valueFactory.list(resultsList.toArray(new IValue[resultsList.size()]));
+				return valueFactory.set(resultsList.toArray(new IValue[resultsList.size()]));
 			}
 			else if (column.hasNext()) {
 				Node node = column.next();
