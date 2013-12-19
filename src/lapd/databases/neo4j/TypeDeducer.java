@@ -11,7 +11,7 @@ import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
 
-// constructs rascal types based on a neo4j node
+// constructs pdb.values types based on the neo4j graph
 public class TypeDeducer {
 	
 	private static final TypeFactory typeFactory = TypeFactory.getInstance();
@@ -81,39 +81,45 @@ public class TypeDeducer {
 	}
 
 	private Type getMapType() {
-		if (!hasHead())
-			return typeFactory.mapType(typeFactory.voidType(), typeFactory.voidType());
-		Node currentKeyNode = currentNode.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
-		Node currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.VALUE, 
-				Direction.OUTGOING).getEndNode();
-		Type leastUpperBoundKeyType = new TypeDeducer(currentKeyNode, typeStore).getType();
-		Type leastUpperBoundValueType = new TypeDeducer(currentValueNode, typeStore).getType();
-		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.TO)) {
-			currentKeyNode = currentKeyNode.getSingleRelationship(RelTypes.TO, 
-					Direction.OUTGOING).getEndNode();
-			currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.VALUE, 
-					Direction.OUTGOING).getEndNode();
-			leastUpperBoundKeyType =  new TypeDeducer(currentKeyNode, typeStore).getType();
-			leastUpperBoundValueType = new TypeDeducer(currentValueNode, typeStore).getType();
+		if (!currentNode.hasRelationship(Direction.OUTGOING, RelTypes.ELE))
+			return typeFactory.mapType(typeFactory.voidType(), typeFactory.voidType());		
+		Type leastUpperBoundKeyType = typeFactory.voidType();
+		Type leastUpperBoundValueType = typeFactory.voidType();
+		Iterable<Relationship> rels = currentNode.getRelationships(RelTypes.ELE, Direction.OUTGOING);
+		for (Relationship rel : rels) {
+			Node keyNode = rel.getEndNode();
+			Node valueNode = keyNode.getSingleRelationship(RelTypes.VALUE, Direction.OUTGOING).getEndNode();
+			leastUpperBoundKeyType = leastUpperBoundKeyType.lub(new TypeDeducer(keyNode, typeStore).getType());
+			leastUpperBoundValueType = leastUpperBoundKeyType.lub(new TypeDeducer(valueNode, typeStore).getType());
 		}
 		return typeFactory.mapType(leastUpperBoundKeyType, leastUpperBoundValueType);
 	}
 
 	private Type getSetType() {
-		return (!hasHead()) ? typeFactory.setType(typeFactory.voidType()) : typeFactory.setType(getLub());
+		return (!currentNode.hasRelationship(Direction.OUTGOING, RelTypes.ELE)) ? typeFactory.setType(typeFactory.voidType()) : typeFactory.setType(getSetLub());
 	}
 
 	private Type getListType() {
-		return (!hasHead()) ? typeFactory.listType(typeFactory.voidType()) : typeFactory.listType(getLub());
+		return (!hasHead()) ? typeFactory.listType(typeFactory.voidType()) : typeFactory.listType(getListLub());
+	}
+	
+	private Type getSetLub() {
+		Iterable<Relationship> rels = currentNode.getRelationships(RelTypes.ELE, Direction.OUTGOING);
+		Type leastUpperBoundType = typeFactory.voidType();
+		for (Relationship rel : rels) {
+			currentNode = rel.getEndNode();
+			leastUpperBoundType = leastUpperBoundType.lub(getType());
+		}
+		return leastUpperBoundType;
 	}
 
-	private Type getLub() {
+	private Type getListLub() {
 		currentNode = currentNode.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
 		Type leastUpperBoundType = getType();
 		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.TO)) {
 			currentNode = currentNode.getSingleRelationship(RelTypes.TO, 
 					Direction.OUTGOING).getEndNode();
-			leastUpperBoundType = getType();
+			leastUpperBoundType = leastUpperBoundType.lub(getType());
 		}
 		return leastUpperBoundType;
 	}
