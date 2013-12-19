@@ -45,11 +45,11 @@ public class TypeDeducer {
 	}
 
 	private Type getBinaryRelType() {
-		Iterator<Relationship> rels = currentNode.getRelationships(RelTypes.GRAPH_PART, Direction.OUTGOING).iterator();
+		Iterator<Relationship> rels = currentNode.getRelationships(RelTypes.PART, Direction.OUTGOING).iterator();
 		if (!rels.hasNext())
 			return typeFactory.setType(typeFactory.voidType());
 		List<Type> argumentList = new ArrayList<Type>();
-		Relationship rel = rels.next().getEndNode().getSingleRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING);
+		Relationship rel = rels.next().getEndNode().getSingleRelationship(RelTypes.TO, Direction.OUTGOING);
 		currentNode = rel.getStartNode();
 		argumentList.add(getType());
 		currentNode = rel.getEndNode();
@@ -72,8 +72,8 @@ public class TypeDeducer {
 		currentNode = currentNode.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
 		List<Type> argumentList = new ArrayList<Type>();
 		argumentList.add(getType());
-		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_ELEMENT)) {
-			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_ELEMENT, 
+		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.TO)) {
+			currentNode = currentNode.getSingleRelationship(RelTypes.TO, 
 					Direction.OUTGOING).getEndNode();
 			argumentList.add(getType());
 		}
@@ -84,14 +84,14 @@ public class TypeDeducer {
 		if (!hasHead())
 			return typeFactory.mapType(typeFactory.voidType(), typeFactory.voidType());
 		Node currentKeyNode = currentNode.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
-		Node currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.MAP_KEY_VALUE, 
+		Node currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.VALUE, 
 				Direction.OUTGOING).getEndNode();
 		Type leastUpperBoundKeyType = new TypeDeducer(currentKeyNode, typeStore).getType();
 		Type leastUpperBoundValueType = new TypeDeducer(currentValueNode, typeStore).getType();
-		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_ELEMENT)) {
-			currentKeyNode = currentKeyNode.getSingleRelationship(RelTypes.NEXT_ELEMENT, 
+		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.TO)) {
+			currentKeyNode = currentKeyNode.getSingleRelationship(RelTypes.TO, 
 					Direction.OUTGOING).getEndNode();
-			currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.MAP_KEY_VALUE, 
+			currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.VALUE, 
 					Direction.OUTGOING).getEndNode();
 			leastUpperBoundKeyType =  new TypeDeducer(currentKeyNode, typeStore).getType();
 			leastUpperBoundValueType = new TypeDeducer(currentValueNode, typeStore).getType();
@@ -110,8 +110,8 @@ public class TypeDeducer {
 	private Type getLub() {
 		currentNode = currentNode.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
 		Type leastUpperBoundType = getType();
-		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_ELEMENT)) {
-			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_ELEMENT, 
+		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.TO)) {
+			currentNode = currentNode.getSingleRelationship(RelTypes.TO, 
 					Direction.OUTGOING).getEndNode();
 			leastUpperBoundType = getType();
 		}

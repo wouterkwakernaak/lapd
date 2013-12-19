@@ -19,7 +19,7 @@ public class Queries {
 	public static ISet recursiveMethods(Node startNode, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {
 		List<IValue> resultsList = new ArrayList<IValue>();	
 		Node node = null;
-		for (Relationship a : startNode.getRelationships(RelTypes.ANNOTATION, Direction.OUTGOING)) {
+		for (Relationship a : startNode.getRelationships(RelTypes.ANNO, Direction.OUTGOING)) {
 			Node annotation = a.getEndNode();
 			if (annotation.getProperty(PropertyNames.ANNOTATION).toString().equals("methodInvocation")) {
 				node = annotation;
@@ -27,7 +27,7 @@ public class Queries {
 			}
 		}
 		node = getHead(node);
-		while (node.hasRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING)) {
+		while (node.hasRelationship(RelTypes.TO, Direction.OUTGOING)) {
 			Node from = getHead(node);
 			Node to = getNextEle(from);
 			String fromLoc = from.getProperty(PropertyNames.SOURCE_LOCATION).toString();
@@ -49,7 +49,7 @@ public class Queries {
 				Node switchBodyHead = getHead(switchBodyRefNode);
 				Node statement = switchBodyHead;
 				boolean hasDefaultCase = false;
-				while (statement.hasRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING)) {
+				while (statement.hasRelationship(RelTypes.TO, Direction.OUTGOING)) {
 					if(statement.getProperty("node").toString().equals("defaultCase")) {
 						hasDefaultCase = true;
 						break;
@@ -70,7 +70,7 @@ public class Queries {
 	}
 	
 	private static Node getNextEle(Node node) {
-		return node.getSingleRelationship(RelTypes.NEXT_ELEMENT, Direction.OUTGOING).getEndNode();
+		return node.getSingleRelationship(RelTypes.TO, Direction.OUTGOING).getEndNode();
 	}
 
 }
