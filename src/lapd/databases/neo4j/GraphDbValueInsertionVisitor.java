@@ -143,9 +143,9 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 
 	@Override
 	public Node visitTuple(ITuple tupleValue) throws GraphDbMappingException {
-		Node firstElementNode = createLinkedNodeCollection(tupleValue.iterator());	
-		firstElementNode.setProperty(PropertyNames.TYPE, TypeNames.TUPLE);
-		return firstElementNode;
+		Node referenceNode = createLinkedNodeCollection(tupleValue.iterator());	
+		referenceNode.setProperty(PropertyNames.TYPE, TypeNames.TUPLE);
+		return referenceNode;
 	}		
 
 	@Override
@@ -176,9 +176,9 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 	}
 	
 	private Node insertList(IList listValue) throws GraphDbMappingException {
-		Node firstElementNode = createLinkedNodeCollection(listValue.iterator());
-		firstElementNode.setProperty(PropertyNames.TYPE, TypeNames.LIST);
-		return firstElementNode;
+		Node referenceNode = createLinkedNodeCollection(listValue.iterator());
+		referenceNode.setProperty(PropertyNames.TYPE, TypeNames.LIST);
+		return referenceNode;
 	}
 	
 	private Node insertSet(ISet setValue) throws GraphDbMappingException {
