@@ -140,17 +140,14 @@ public class GraphDbValueRetrievalVisitor implements ITypeVisitor<IValue, GraphD
 	@Override
 	public IValue visitMap(Type type) throws GraphDbMappingException {
 		IMapWriter mapWriter = valueFactory.mapWriter();
-		if (!hasHead())		
+		if (!node.hasRelationship(RelTypes.ELE, Direction.OUTGOING))		
 			return mapWriter.done();
-		Node currentKeyNode = node.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
-		Node currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.VALUE, Direction.OUTGOING).getEndNode();
-		mapWriter.put(new TypeDeducer(currentKeyNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(currentKeyNode, valueFactory, typeStore)),
-				new TypeDeducer(currentValueNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(currentValueNode, valueFactory, typeStore)));
-		while (currentKeyNode.hasRelationship(Direction.OUTGOING, RelTypes.TO)) {
-			currentKeyNode = currentKeyNode.getSingleRelationship(RelTypes.TO, Direction.OUTGOING).getEndNode();
-			currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.VALUE, Direction.OUTGOING).getEndNode();
-			mapWriter.put(new TypeDeducer(currentKeyNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(currentKeyNode, valueFactory, typeStore)),
-					new TypeDeducer(currentValueNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(currentValueNode, valueFactory, typeStore)));
+		Iterable<Relationship> rels = node.getRelationships(RelTypes.ELE, Direction.OUTGOING);
+		for (Relationship rel : rels) {
+			Node keyNode = rel.getEndNode();
+			Node valueNode = keyNode.getSingleRelationship(RelTypes.VALUE, Direction.OUTGOING).getEndNode();
+			mapWriter.put(new TypeDeducer(keyNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(keyNode, valueFactory, typeStore)),
+					new TypeDeducer(valueNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(valueNode, valueFactory, typeStore)));
 		}
 		return mapWriter.done();
 	}

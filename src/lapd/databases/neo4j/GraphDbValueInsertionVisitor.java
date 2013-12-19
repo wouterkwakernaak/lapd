@@ -150,23 +150,16 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 
 	@Override
 	public Node visitMap(IMap mapValue) throws GraphDbMappingException {
-		Iterator<Entry<IValue, IValue>> iterator = mapValue.entryIterator();	
 		Node referenceNode = graphDb.createNode();
 		referenceNode.setProperty(PropertyNames.TYPE, TypeNames.MAP);
-		Node previousElementNode = null;
-		if (iterator.hasNext()) {			
-			Entry<IValue, IValue> entry = iterator.next();			
-			previousElementNode = entry.getKey().accept(this);
-			referenceNode.createRelationshipTo(previousElementNode, RelTypes.HEAD);
-			addValueToMap(previousElementNode, entry.getValue());
-			while (iterator.hasNext()) {
-				entry = iterator.next();
-				Node currentElementNode = entry.getKey().accept(this);
-				addValueToMap(currentElementNode, entry.getValue());
-				previousElementNode.createRelationshipTo(currentElementNode, RelTypes.TO);
-				previousElementNode = currentElementNode;
-			}
-		}	
+		Iterator<Entry<IValue, IValue>> iterator = mapValue.entryIterator();	
+		while(iterator.hasNext()) {
+			Entry<IValue, IValue> entry = iterator.next();
+			Node keyNode = entry.getKey().accept(this);
+			Node valueNode = entry.getValue().accept(this);
+			keyNode.createRelationshipTo(valueNode, RelTypes.VALUE);
+			referenceNode.createRelationshipTo(keyNode, RelTypes.ELE);
+		}
 		return referenceNode;
 	}
 	
@@ -190,11 +183,6 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 		}		
 		return referenceNode;
 	}
-
-	private void addValueToMap(Node keyNode, IValue value) throws GraphDbMappingException {
-		Node valueNode = value.accept(this);
-		keyNode.createRelationshipTo(valueNode, RelTypes.VALUE);		
-	}	
 	
 	// stores values such as integers and reals as strings in order to allow larger then 64 bit integer storage
 	private Node createPrimitiveStringNode(IValue value, String propertyName, String typeName) {
