@@ -89,10 +89,15 @@ public class GraphDbValueRetrievalVisitor implements ITypeVisitor<IValue, GraphD
 	public IValue visitSet(Type type) throws GraphDbMappingException {
 		if (type.isRelation() && type.getArity() == 2)
 			return reconstructBinaryRelation(type);
-		if (!hasHead())
+		if (!node.hasRelationship(Direction.OUTGOING, RelTypes.ELE))
 			return valueFactory.set(TypeFactory.getInstance().voidType());
-		List<IValue> elementList = getElementValues(type);
-		return valueFactory.set(elementList.toArray(new IValue[elementList.size()]));
+		Set<IValue> elements = new HashSet<IValue>();
+		Iterable<Relationship> rels = node.getRelationships(RelTypes.ELE, Direction.OUTGOING);
+		for (Relationship rel : rels) {
+			Node eleNode = rel.getEndNode();
+			elements.add(new TypeDeducer(eleNode, typeStore).getType().accept(new GraphDbValueRetrievalVisitor(eleNode, valueFactory, typeStore)));
+		}
+		return valueFactory.set(elements.toArray(new IValue[elements.size()]));
 	}
 
 	@Override

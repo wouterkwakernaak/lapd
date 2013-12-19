@@ -186,7 +186,7 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 		referenceNode.setProperty(PropertyNames.TYPE, TypeNames.SET);
 		for (IValue element : setValue) {
 			Node elementNode = element.accept(this);
-			referenceNode.createRelationshipTo(elementNode, RelTypes.TO);
+			referenceNode.createRelationshipTo(elementNode, RelTypes.ELE);
 		}		
 		return referenceNode;
 	}

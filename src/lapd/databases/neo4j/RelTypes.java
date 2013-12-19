@@ -8,5 +8,6 @@ public enum RelTypes implements RelationshipType
     HEAD,	// pointer to the start of a list
     TO,		// general purpose relation
     VALUE,	// key to value relation on maps
-    PART	// relation to indicate disconnected graph parts
+    PART,	// relation to indicate disconnected graph parts
+    ELE,	// element of a set/map
 }
