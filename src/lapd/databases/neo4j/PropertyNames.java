@@ -14,5 +14,6 @@ public class PropertyNames {
 	public final static String ANNOTATION = "annotation";
 	public final static String TYPE = "type";
 	public final static String ADT = "adt";
+	public final static String PARAMETERS = "para";
 
 }

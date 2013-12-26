@@ -19,6 +19,7 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
@@ -138,6 +139,14 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 	public Node visitConstructor(IConstructor constructorValue) throws GraphDbMappingException {
 		Node node = createAnnotatableNode(constructorValue, TypeNames.CONSTRUCTOR);
 		node.setProperty(PropertyNames.ADT, constructorValue.getType().getAbstractDataType().getName());
+		Type tupleType = constructorValue.getChildrenTypes();
+		int arity = tupleType.getArity();
+		if (arity > 0) {
+			String[] parameterTypeNames = new String[arity];
+			for (int i = 0; i < arity; i++)
+				parameterTypeNames[i] = tupleType.getFieldType(i).toString();
+			node.setProperty(PropertyNames.PARAMETERS, parameterTypeNames);
+		}
 		return node;
 	}
 

@@ -169,8 +169,7 @@ public class GraphDbValueRetrievalVisitor implements ITypeVisitor<IValue, GraphD
 
 	@Override
 	public IValue visitAbstractData(Type type) throws GraphDbMappingException {
-		String name = node.getProperty(PropertyNames.NODE).toString();
-		return visitConstructor(typeStore.lookupConstructor(type, name).iterator().next());
+		return visitConstructor(new TypeDeducer(node, typeStore).getType());
 	}
 
 	@Override

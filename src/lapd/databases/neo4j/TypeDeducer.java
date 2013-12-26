@@ -3,6 +3,7 @@ package lapd.databases.neo4j;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
@@ -63,7 +64,26 @@ public class TypeDeducer {
 		Type adt = typeStore.lookupAbstractDataType(adtName);		
 		if (adt == null)
 			return typeFactory.nodeType();
-		return typeStore.lookupConstructor(adt, name).iterator().next();
+		Set<Type> potentialTypes = typeStore.lookupConstructor(adt, name);
+		if (potentialTypes.size() == 1)
+			return typeStore.lookupConstructor(adt, name).iterator().next();
+		else {
+			String[] parameterTypeNames = (String[])currentNode.getProperty(PropertyNames.PARAMETERS);			
+			for(Type type : potentialTypes) {
+				Type tupleType = type.getFieldTypes();
+				int arity = tupleType.getArity();
+				if (arity == parameterTypeNames.length) {
+					boolean typeFound = true;
+					for (int i = 0; i < arity; i++) {
+						if (!parameterTypeNames[i].equals(tupleType.getFieldType(i).toString()))
+							typeFound = false;
+					}
+					if (typeFound)
+						return type;
+				}
+			}
+		}
+		return null;
 	}
 
 	private Type getTupleType() {
