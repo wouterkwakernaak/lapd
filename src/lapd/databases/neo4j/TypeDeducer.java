@@ -68,7 +68,9 @@ public class TypeDeducer {
 		if (potentialTypes.size() == 1)
 			return typeStore.lookupConstructor(adt, name).iterator().next();
 		else {
-			String[] parameterTypeNames = (String[])currentNode.getProperty(PropertyNames.PARAMETERS);			
+			String[] parameterTypeNames = new String[0];
+			if(currentNode.hasProperty(PropertyNames.PARAMETERS))
+				parameterTypeNames = (String[])currentNode.getProperty(PropertyNames.PARAMETERS);			
 			for(Type type : potentialTypes) {
 				Type tupleType = type.getFieldTypes();
 				int arity = tupleType.getArity();
