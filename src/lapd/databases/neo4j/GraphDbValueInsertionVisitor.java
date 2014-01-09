@@ -73,7 +73,9 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Node, GraphDb
 	
 	@Override
 	public Node visitSourceLocation(ISourceLocation sourceLocationValue) throws GraphDbMappingException {
-		return createPrimitiveStringNode(sourceLocationValue, PropertyNames.SOURCE_LOCATION, TypeNames.SOURCE_LOCATION);
+		Node node = createPrimitiveStringNode(sourceLocationValue, PropertyNames.SOURCE_LOCATION, TypeNames.SOURCE_LOCATION);
+		nodeIndex.add(node, PropertyNames.SOURCE_LOCATION, sourceLocationValue.toString());
+		return node;
 	}
 	
 	@Override
