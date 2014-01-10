@@ -31,6 +31,24 @@ public class Queries {
 		return vf.set(results.toArray(new IValue[results.size()]));
 	}
 	
+	public static ISet reachability(Node startNode, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {
+		Set<IValue> results = new HashSet<IValue>();
+		Set<Node> markedNodes = new HashSet<Node>();
+		dfsTraverse(startNode, markedNodes);
+		markedNodes.remove(startNode);
+		for (Node node : markedNodes)
+			results.add(type.accept(new GraphDbValueRetrievalVisitor(node, vf, ts)));
+		return vf.set(results.toArray(new IValue[results.size()]));
+	}
+	
+	private static void dfsTraverse(Node start, Set<Node> markedNodes) {
+		if (!markedNodes.contains(start)) {
+			markedNodes.add(start);
+			for (Relationship rel : start.getRelationships(RelTypes.TO, Direction.OUTGOING))
+				dfsTraverse(rel.getEndNode(), markedNodes);
+		}
+	}
+	
 	public static ISet switchNoDefault(Index<Node> index, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {
 		List<IValue> resultsList = new ArrayList<IValue>();	
 		for (Node switchRefNode : index.get("node", "switch")) {

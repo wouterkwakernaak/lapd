@@ -203,7 +203,7 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		switch(queryId) {
 			case 1: return Queries.recursiveMethods(graphOperations.getAllNodes(), valueFactory, type.getElementType(), typeStore);
 			case 2: return Queries.switchNoDefault(nodeIndex, valueFactory, type.getElementType(), typeStore);
-			case 3: return null;
+			case 3: return Queries.reachability(nodeIndex.get("loc", graphId).getSingle(), valueFactory, type.getElementType(), typeStore);
 			default: throw new GraphDbMappingException("Unknown query id.");
 		}
 	}
