@@ -1,7 +1,9 @@
 package lapd.databases.neo4j;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.imp.pdb.facts.ISet;
 import org.eclipse.imp.pdb.facts.IValue;
@@ -16,28 +18,17 @@ import org.neo4j.graphdb.index.Index;
 // Predefined java traversals
 public class Queries {
 	
-	public static ISet recursiveMethods(Node startNode, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {
-		List<IValue> resultsList = new ArrayList<IValue>();	
-		Node node = null;
-		for (Relationship a : startNode.getRelationships(RelTypes.ANNO, Direction.OUTGOING)) {
-			Node annotation = a.getEndNode();
-			if (annotation.getProperty(PropertyNames.ANNOTATION).toString().equals("methodInvocation")) {
-				node = annotation;
-				break;
+	public static ISet recursiveMethods(Iterable<Node> allNodes, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {
+		Set<IValue> results = new HashSet<IValue>();	
+		for (Node node : allNodes) {
+			if (node.hasRelationship(RelTypes.TO, Direction.OUTGOING)) {
+				for (Relationship rel : node.getRelationships(RelTypes.TO, Direction.OUTGOING)) {
+					if (rel.getEndNode().equals(node))
+						results.add(type.accept(new GraphDbValueRetrievalVisitor(node, vf, ts)));
+				}
 			}
 		}
-		node = getHead(node);
-		while (node.hasRelationship(RelTypes.TO, Direction.OUTGOING)) {
-			Node from = getHead(node);
-			Node to = getNextEle(from);
-			String fromLoc = from.getProperty(PropertyNames.SOURCE_LOCATION).toString();
-			String toLoc = to.getProperty(PropertyNames.SOURCE_LOCATION).toString();
-			if (fromLoc.contains(toLoc.subSequence(14, toLoc.length()))) {
-				resultsList.add(type.accept(new GraphDbValueRetrievalVisitor(to, vf, ts)));
-			}
-			node = getNextEle(node);
-		}
-		return vf.set(resultsList.toArray(new IValue[resultsList.size()]));
+		return vf.set(results.toArray(new IValue[results.size()]));
 	}
 	
 	public static ISet switchNoDefault(Index<Node> index, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {

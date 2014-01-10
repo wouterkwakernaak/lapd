@@ -25,6 +25,7 @@ import org.neo4j.graphdb.NotFoundException;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
+import org.neo4j.tooling.GlobalGraphOperations;
 import org.osgi.framework.Bundle;
 
 public class GraphDbValueIO extends AbstractGraphDbValueIO {
@@ -49,6 +50,7 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	private final Index<Node> nodeIndex;
 	private String dbDirectoryPath;
 	private final ExecutionEngine queryEngine;
+	private final GlobalGraphOperations graphOperations;
 	
 	
 	private GraphDbValueIO() throws IOException {
@@ -65,6 +67,7 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 		queryEngine = new ExecutionEngine(graphDb);
 		registerShutdownHook(graphDb);
 		nodeIndex = graphDb.index().forNodes("nodes");
+		graphOperations = GlobalGraphOperations.at(graphDb);
 		graphDbValueInsertionVisitor = new GraphDbValueInsertionVisitor(graphDb, nodeIndex);		
 	}
 	
@@ -196,9 +199,9 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	}
 
 	@Override
-	public ISet executeJavaQuery(int queryId, String graphId, Type type, TypeStore typeStore) throws GraphDbMappingException {
+	public ISet executeJavaQuery(int queryId, String graphId, Type type, TypeStore typeStore) throws GraphDbMappingException {		
 		switch(queryId) {
-			case 1: return Queries.recursiveMethods(nodeIndex.get("id", graphId).getSingle(), valueFactory, type.getElementType(), typeStore);
+			case 1: return Queries.recursiveMethods(graphOperations.getAllNodes(), valueFactory, type.getElementType(), typeStore);
 			case 2: return Queries.switchNoDefault(nodeIndex, valueFactory, type.getElementType(), typeStore);
 			case 3: return null;
 			default: throw new GraphDbMappingException("Unknown query id.");
