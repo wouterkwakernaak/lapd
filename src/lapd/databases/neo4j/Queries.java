@@ -1,8 +1,6 @@
 package lapd.databases.neo4j;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.imp.pdb.facts.ISet;
@@ -18,7 +16,7 @@ import org.neo4j.graphdb.index.Index;
 // Predefined java traversals
 public class Queries {
 	
-	public static ISet recursiveMethods(Iterable<Node> allNodes, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {
+	public static ISet recursiveMethodsQ(Iterable<Node> allNodes, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {
 		Set<IValue> results = new HashSet<IValue>();	
 		for (Node node : allNodes) {
 			if (node.hasRelationship(RelTypes.TO, Direction.OUTGOING)) {
@@ -31,7 +29,7 @@ public class Queries {
 		return vf.set(results.toArray(new IValue[results.size()]));
 	}
 	
-	public static ISet reachability(Node startNode, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {
+	public static ISet reachabilityQ(Node startNode, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {
 		Set<IValue> results = new HashSet<IValue>();
 		Set<Node> markedNodes = new HashSet<Node>();
 		dfsTraverse(startNode, markedNodes);
@@ -49,8 +47,8 @@ public class Queries {
 		}
 	}
 	
-	public static ISet switchNoDefault(Index<Node> index, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {
-		List<IValue> resultsList = new ArrayList<IValue>();	
+	public static ISet switchQ(Index<Node> index, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {
+		Set<IValue> results = new HashSet<IValue>();
 		for (Node switchRefNode : index.get("node", "switch")) {
 			Node switchHead = getHead(switchRefNode);
 			Node switchBodyRefNode = getNextEle(switchHead);
@@ -66,12 +64,22 @@ public class Queries {
 					statement = getNextEle(statement);
 				}
 				if (!hasDefaultCase)
-					resultsList.add(type.accept(new GraphDbValueRetrievalVisitor(switchRefNode, vf, ts)));
+					results.add(type.accept(new GraphDbValueRetrievalVisitor(switchRefNode, vf, ts)));
 			}
 			else
-				resultsList.add(type.accept(new GraphDbValueRetrievalVisitor(switchRefNode, vf, ts)));
+				results.add(type.accept(new GraphDbValueRetrievalVisitor(switchRefNode, vf, ts)));
 		}
-		return vf.set(resultsList.toArray(new IValue[resultsList.size()]));
+		return vf.set(results.toArray(new IValue[results.size()]));
+	}
+	
+	public static ISet exceptionQ(Index<Node> index, IValueFactory vf, Type type, TypeStore ts) throws GraphDbMappingException {
+		Set<IValue> results = new HashSet<IValue>();
+		for (Node catchRefNode : index.get("node", "catch")) {
+			Node exceptionNode = getHead(getHead(getHead(getHead(catchRefNode))));
+			if (exceptionNode.getProperty(PropertyNames.STRING).equals("Exception"))
+				results.add(type.accept(new GraphDbValueRetrievalVisitor(catchRefNode, vf, ts)));		
+		}
+		return vf.set(results.toArray(new IValue[results.size()]));
 	}
 	
 	private static Node getHead(Node node) {

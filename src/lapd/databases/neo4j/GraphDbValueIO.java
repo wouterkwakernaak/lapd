@@ -201,9 +201,10 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	@Override
 	public ISet executeJavaQuery(int queryId, String graphId, Type type, TypeStore typeStore) throws GraphDbMappingException {		
 		switch(queryId) {
-			case 1: return Queries.recursiveMethods(graphOperations.getAllNodes(), valueFactory, type.getElementType(), typeStore);
-			case 2: return Queries.switchNoDefault(nodeIndex, valueFactory, type.getElementType(), typeStore);
-			case 3: return Queries.reachability(nodeIndex.get("loc", graphId).getSingle(), valueFactory, type.getElementType(), typeStore);
+			case 1: return Queries.recursiveMethodsQ(graphOperations.getAllNodes(), valueFactory, type.getElementType(), typeStore);
+			case 2: return Queries.switchQ(nodeIndex, valueFactory, type.getElementType(), typeStore);
+			case 3: return Queries.reachabilityQ(nodeIndex.get("loc", graphId).getSingle(), valueFactory, type.getElementType(), typeStore);
+			case 4: return Queries.exceptionQ(nodeIndex, valueFactory, type.getElementType(), typeStore);
 			default: throw new GraphDbMappingException("Unknown query id.");
 		}
 	}
