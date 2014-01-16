@@ -67,7 +67,7 @@ public class TypeDeducer {
 		Set<Type> potentialTypes = typeStore.lookupConstructor(adt, name);
 		if (potentialTypes.size() == 1)
 			return typeStore.lookupConstructor(adt, name).iterator().next();
-		else {
+		else if (potentialTypes.size() > 1) {
 			String[] parameterTypeNames = new String[0];
 			if(currentNode.hasProperty(PropertyNames.PARAMETERS))
 				parameterTypeNames = (String[])currentNode.getProperty(PropertyNames.PARAMETERS);			
@@ -85,7 +85,7 @@ public class TypeDeducer {
 				}
 			}
 		}
-		return null;
+		return typeFactory.nodeType();
 	}
 
 	private Type getTupleType() {
