@@ -50,7 +50,7 @@ public class TypeDeducer {
 		if (!rels.hasNext())
 			return typeFactory.setType(typeFactory.voidType());
 		List<Type> argumentList = new ArrayList<Type>();
-		Relationship rel = rels.next().getEndNode().getSingleRelationship(RelTypes.TO, Direction.OUTGOING);
+		Relationship rel = rels.next().getEndNode().getRelationships(RelTypes.TO, Direction.OUTGOING).iterator().next();
 		currentNode = rel.getStartNode();
 		argumentList.add(getType());
 		currentNode = rel.getEndNode();
@@ -67,7 +67,7 @@ public class TypeDeducer {
 		Set<Type> potentialTypes = typeStore.lookupConstructor(adt, name);
 		if (potentialTypes.size() == 1)
 			return typeStore.lookupConstructor(adt, name).iterator().next();
-		else {
+		else if (potentialTypes.size() > 1) {
 			String[] parameterTypeNames = new String[0];
 			if(currentNode.hasProperty(PropertyNames.PARAMETERS))
 				parameterTypeNames = (String[])currentNode.getProperty(PropertyNames.PARAMETERS);			
@@ -85,7 +85,7 @@ public class TypeDeducer {
 				}
 			}
 		}
-		return null;
+		return typeFactory.nodeType();
 	}
 
 	private Type getTupleType() {

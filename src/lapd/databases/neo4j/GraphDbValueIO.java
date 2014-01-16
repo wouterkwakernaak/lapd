@@ -45,7 +45,7 @@ public class GraphDbValueIO extends AbstractGraphDbValueIO {
 	
 	private GraphDbValueIO() throws IOException {
 		Map<String, String> config = new HashMap<String, String>();
-		config.put("cache_type", "none");
+		config.put("cache_type", "soft");
 		config.put("use_memory_mapped_buffers", "true");
 		config.put("logical_log_rotation_threshold", "500M");
 		config.put("neostore.nodestore.db.mapped_memory", "100M");
