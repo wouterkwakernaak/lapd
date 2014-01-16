@@ -50,7 +50,7 @@ public class TypeDeducer {
 		if (!rels.hasNext())
 			return typeFactory.setType(typeFactory.voidType());
 		List<Type> argumentList = new ArrayList<Type>();
-		Relationship rel = rels.next().getEndNode().getSingleRelationship(RelTypes.TO, Direction.OUTGOING);
+		Relationship rel = rels.next().getEndNode().getRelationships(RelTypes.TO, Direction.OUTGOING).iterator().next();
 		currentNode = rel.getStartNode();
 		argumentList.add(getType());
 		currentNode = rel.getEndNode();
