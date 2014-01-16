@@ -19,6 +19,7 @@ import org.eclipse.imp.pdb.facts.ISourceLocation;
 import org.eclipse.imp.pdb.facts.IString;
 import org.eclipse.imp.pdb.facts.ITuple;
 import org.eclipse.imp.pdb.facts.IValue;
+import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.visitors.IValueVisitor;
 import org.neo4j.unsafe.batchinsert.BatchInserter;
 import org.neo4j.unsafe.batchinsert.BatchInserterIndex;
@@ -43,8 +44,11 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 	public Long visitString(IString stringValue) throws GraphDbMappingException {
 		Map<String, Object> properties = createPropertyMap();
 		properties.put(PropertyNames.TYPE, TypeNames.STRING);
-		properties.put(PropertyNames.STRING, stringValue.getValue());
+		properties.put(PropertyNames.STRING, stringValue.getValue());		
 		long node = createNode(properties);
+		Map<String, Object> propertiesForIndexing = new HashMap<String, Object>();
+		propertiesForIndexing.put(PropertyNames.STRING, stringValue.getValue());
+		nodeIndex.add(node, propertiesForIndexing);
 		return node;
 	}	
 	
@@ -82,6 +86,9 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 	@Override
 	public Long visitSourceLocation(ISourceLocation sourceLocationValue) throws GraphDbMappingException {
 		long node = createPrimitiveStringNode(sourceLocationValue, PropertyNames.SOURCE_LOCATION, TypeNames.SOURCE_LOCATION);
+		Map<String, Object> propertiesForIndexing = new HashMap<String, Object>();
+		propertiesForIndexing.put(PropertyNames.SOURCE_LOCATION, sourceLocationValue.toString());
+		nodeIndex.add(node, propertiesForIndexing);
 		return node;
 	}
 	
@@ -113,8 +120,34 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 
 	@Override
 	public Long visitRelation(ISet setValue) throws GraphDbMappingException {		
-		long node = insertSet(setValue);
-		return node;
+		if (setValue.getElementType().getArity() != 2)
+			return insertSet(setValue);
+		Map<String, Object> properties = createPropertyMap();
+		properties.put(PropertyNames.TYPE, TypeNames.BINARY_RELATION);
+		long referenceNode = createNode(properties);
+		Map<IValue, Long> currentNodes = new HashMap<IValue, Long>();
+		for (IValue tuple : setValue) {
+			IValue firstElement = ((ITuple)tuple).get(0);
+			IValue secondElement = ((ITuple)tuple).get(1);			
+			Long firstElementNode = null;
+			if (!currentNodes.containsKey(firstElement)) {				
+				firstElementNode = firstElement.accept(this);
+				currentNodes.put(firstElement, firstElementNode);
+				inserter.createRelationship(referenceNode, firstElementNode, RelTypes.PART, null);
+			}
+			else
+				firstElementNode = currentNodes.get(firstElement);
+			if (!currentNodes.containsKey(secondElement)) {				
+				Long secondElementNode = secondElement.accept(this);
+				currentNodes.put(secondElement, secondElementNode);
+				inserter.createRelationship(firstElementNode, secondElementNode, RelTypes.TO, null);
+			}
+			else {
+				Long secondElementNode = currentNodes.get(secondElement);
+				inserter.createRelationship(firstElementNode, secondElementNode, RelTypes.TO, null);
+			}
+		}
+		return referenceNode;
 	}
 	
 	@Override
@@ -126,7 +159,15 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 	@Override
 	public Long visitConstructor(IConstructor constructorValue) throws GraphDbMappingException {
 		Map<String, Object> properties = createPropertyMap();
-		properties.put(PropertyNames.ADT, constructorValue.getType().getAbstractDataType().getName());
+		properties.put(PropertyNames.ADT, constructorValue.getType().getAbstractDataType().getName());		
+		Type tupleType = constructorValue.getChildrenTypes();
+		int arity = tupleType.getArity();
+		if (arity > 0) {
+			String[] parameterTypeNames = new String[arity];
+			for (int i = 0; i < arity; i++)
+				parameterTypeNames[i] = tupleType.getFieldType(i).toString();
+			properties.put(PropertyNames.PARAMETERS, parameterTypeNames);
+		}
 		long node = createAnnotatableNode(constructorValue, TypeNames.CONSTRUCTOR, properties);
 		return node;
 	}
@@ -135,29 +176,22 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 	public Long visitTuple(ITuple tupleValue) throws GraphDbMappingException {
 		Map<String, Object> properties = createPropertyMap();
 		properties.put(PropertyNames.TYPE, TypeNames.TUPLE);
-		long firstElementNode = createIterableNodeCollection(tupleValue.iterator(), properties);
+		long firstElementNode = createLinkedNodeCollection(tupleValue.iterator(), properties);
 		return firstElementNode;
-	}		
-
+	}
+	
 	@Override
 	public Long visitMap(IMap mapValue) throws GraphDbMappingException {
-		Iterator<Entry<IValue, IValue>> iterator = mapValue.entryIterator();	
 		Map<String, Object> properties = createPropertyMap();
 		properties.put(PropertyNames.TYPE, TypeNames.MAP);
 		long referenceNode = createNode(properties);
-		long previousElementNode;
-		if (iterator.hasNext()) {			
-			Entry<IValue, IValue> entry = iterator.next();			
-			previousElementNode = entry.getKey().accept(this);
-			inserter.createRelationship(referenceNode, previousElementNode,  RelTypes.HEAD, null);
-			addValueToMap(previousElementNode, entry.getValue());
-			while (iterator.hasNext()) {
-				entry = iterator.next();
-				long currentElementNode = entry.getKey().accept(this);
-				addValueToMap(currentElementNode, entry.getValue());
-				inserter.createRelationship(previousElementNode, currentElementNode, RelTypes.NEXT_ELEMENT, null);
-				previousElementNode = currentElementNode;
-			}
+		Iterator<Entry<IValue, IValue>> iterator = mapValue.entryIterator();	
+		while(iterator.hasNext()) {
+			Entry<IValue, IValue> entry = iterator.next();
+			long keyNode = entry.getKey().accept(this);
+			long valueNode = entry.getValue().accept(this);
+			inserter.createRelationship(keyNode, valueNode, RelTypes.VALUE, null);
+			inserter.createRelationship(referenceNode, keyNode, RelTypes.ELE, null);
 		}
 		return referenceNode;
 	}
@@ -166,25 +200,24 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 	public Long visitExternal(IExternalValue externalValue)	throws GraphDbMappingException {
 		throw new GraphDbMappingException("External values not supported.");
 	}
-	
+
 	private Long insertList(IList listValue) throws GraphDbMappingException {
 		Map<String, Object> properties = createPropertyMap();
 		properties.put(PropertyNames.TYPE, TypeNames.LIST);
-		long firstElementNode = createIterableNodeCollection(listValue.iterator(), properties);
+		long firstElementNode = createLinkedNodeCollection(listValue.iterator(), properties);
 		return firstElementNode;
 	}
 	
 	private Long insertSet(ISet setValue) throws GraphDbMappingException {
 		Map<String, Object> properties = createPropertyMap();
-		properties.put(PropertyNames.TYPE, TypeNames.SET);		
-		long firstElementNode = createIterableNodeCollection(setValue.iterator(), properties);
-		return firstElementNode;
+		properties.put(PropertyNames.TYPE, TypeNames.SET);
+		long referenceNode = createNode(properties);
+		for (IValue element : setValue) {
+			long elementNode = element.accept(this);
+			inserter.createRelationship(referenceNode, elementNode, RelTypes.ELE, null);
+		}		
+		return referenceNode;
 	}
-
-	private void addValueToMap(long keyNode, IValue value) throws GraphDbMappingException {
-		long valueNode = value.accept(this);
-		inserter.createRelationship(keyNode, valueNode, RelTypes.MAP_KEY_VALUE, null);
-	}	
 	
 	// stores values such as integers and reals as strings in order to allow larger then 64 bit integer storage
 	private Long createPrimitiveStringNode(IValue value, String propertyName, String typeName) {
@@ -195,7 +228,7 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 		return node;
 	}
 	
-	private Long createIterableNodeCollection(Iterator<IValue> iterator, Map<String, Object> properties) throws GraphDbMappingException {
+	private Long createLinkedNodeCollection(Iterator<IValue> iterator, Map<String, Object> properties) throws GraphDbMappingException {
 		long referenceNode = createNode(properties);
 		long previousElementNode;
 		if (iterator.hasNext()) {
@@ -205,7 +238,7 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 			while (iterator.hasNext()) {
 				IValue currentElementValue = iterator.next();
 				long currentElementNode = currentElementValue.accept(this);
-				inserter.createRelationship(previousElementNode, currentElementNode, RelTypes.NEXT_ELEMENT, null);
+				inserter.createRelationship(previousElementNode, currentElementNode, RelTypes.TO, null);
 				previousElementNode = currentElementNode;
 			}
 		}
@@ -217,20 +250,20 @@ public class GraphDbValueInsertionVisitor implements IValueVisitor<Long, GraphDb
 			properties.put("id", id);
 			rootNode = false;
 		}
-		long referenceNode = inserter.createNode(properties);
-		return referenceNode;
+		long node = inserter.createNode(properties);
+		return node;
 	}
 	
 	private Long createAnnotatableNode(INode nodeValue, String typeName, Map<String, Object> properties) 
 			throws GraphDbMappingException {
 		properties.put(PropertyNames.NODE, nodeValue.getName());
 		properties.put(PropertyNames.TYPE, typeName);
-		long node = createIterableNodeCollection(nodeValue.getChildren().iterator(), properties);
+		long node = createLinkedNodeCollection(nodeValue.getChildren().iterator(), properties);
 		for (Entry<String, IValue> annotation : nodeValue.asAnnotatable().getAnnotations().entrySet()) {
 			Map<String, Object> annotationProperties = new HashMap<String, Object>();
 			annotationProperties.put(PropertyNames.ANNOTATION, annotation.getKey());
 			long annotationNode = annotation.getValue().accept(new GraphDbValueInsertionVisitor(inserter, annotationProperties, nodeIndex, false, id));
-			inserter.createRelationship(node, annotationNode, RelTypes.ANNOTATION, null);
+			inserter.createRelationship(node, annotationNode, RelTypes.ANNO, null);
 		}
 		nodeIndex.add(node, properties);
 		return node;

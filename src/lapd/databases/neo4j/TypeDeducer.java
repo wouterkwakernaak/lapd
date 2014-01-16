@@ -1,14 +1,18 @@
 package lapd.databases.neo4j;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+
 import org.eclipse.imp.pdb.facts.type.Type;
 import org.eclipse.imp.pdb.facts.type.TypeFactory;
 import org.eclipse.imp.pdb.facts.type.TypeStore;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 
-// constructs rascal types based on a neo4j node
+// constructs pdb.values types based on the neo4j graph
 public class TypeDeducer {
 	
 	private static final TypeFactory typeFactory = TypeFactory.getInstance();
@@ -36,8 +40,22 @@ public class TypeDeducer {
 			case TypeNames.SOURCE_LOCATION: return typeFactory.sourceLocationType();
 			case TypeNames.STRING: 			return typeFactory.stringType();
 			case TypeNames.TUPLE: 			return getTupleType();
+			case TypeNames.BINARY_RELATION: return getBinaryRelType();
 			default: 						return typeFactory.valueType();
 		}
+	}
+
+	private Type getBinaryRelType() {
+		Iterator<Relationship> rels = currentNode.getRelationships(RelTypes.PART, Direction.OUTGOING).iterator();
+		if (!rels.hasNext())
+			return typeFactory.setType(typeFactory.voidType());
+		List<Type> argumentList = new ArrayList<Type>();
+		Relationship rel = rels.next().getEndNode().getSingleRelationship(RelTypes.TO, Direction.OUTGOING);
+		currentNode = rel.getStartNode();
+		argumentList.add(getType());
+		currentNode = rel.getEndNode();
+		argumentList.add(getType());		
+		return typeFactory.relType(argumentList.toArray(new Type[argumentList.size()]));
 	}
 
 	private Type getConstructorType() {
@@ -46,7 +64,28 @@ public class TypeDeducer {
 		Type adt = typeStore.lookupAbstractDataType(adtName);		
 		if (adt == null)
 			return typeFactory.nodeType();
-		return typeStore.lookupConstructor(adt, name).iterator().next();
+		Set<Type> potentialTypes = typeStore.lookupConstructor(adt, name);
+		if (potentialTypes.size() == 1)
+			return typeStore.lookupConstructor(adt, name).iterator().next();
+		else {
+			String[] parameterTypeNames = new String[0];
+			if(currentNode.hasProperty(PropertyNames.PARAMETERS))
+				parameterTypeNames = (String[])currentNode.getProperty(PropertyNames.PARAMETERS);			
+			for(Type type : potentialTypes) {
+				Type tupleType = type.getFieldTypes();
+				int arity = tupleType.getArity();
+				if (arity == parameterTypeNames.length) {
+					boolean typeFound = true;
+					for (int i = 0; i < arity; i++) {
+						if (!parameterTypeNames[i].equals(tupleType.getFieldType(i).toString()))
+							typeFound = false;
+					}
+					if (typeFound)
+						return type;
+				}
+			}
+		}
+		return null;
 	}
 
 	private Type getTupleType() {
@@ -55,8 +94,8 @@ public class TypeDeducer {
 		currentNode = currentNode.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
 		List<Type> argumentList = new ArrayList<Type>();
 		argumentList.add(getType());
-		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_ELEMENT)) {
-			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_ELEMENT, 
+		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.TO)) {
+			currentNode = currentNode.getSingleRelationship(RelTypes.TO, 
 					Direction.OUTGOING).getEndNode();
 			argumentList.add(getType());
 		}
@@ -64,39 +103,45 @@ public class TypeDeducer {
 	}
 
 	private Type getMapType() {
-		if (!hasHead())
-			return typeFactory.mapType(typeFactory.voidType(), typeFactory.voidType());
-		Node currentKeyNode = currentNode.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
-		Node currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.MAP_KEY_VALUE, 
-				Direction.OUTGOING).getEndNode();
-		Type leastUpperBoundKeyType = new TypeDeducer(currentKeyNode, typeStore).getType();
-		Type leastUpperBoundValueType = new TypeDeducer(currentValueNode, typeStore).getType();
-		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_ELEMENT)) {
-			currentKeyNode = currentKeyNode.getSingleRelationship(RelTypes.NEXT_ELEMENT, 
-					Direction.OUTGOING).getEndNode();
-			currentValueNode = currentKeyNode.getSingleRelationship(RelTypes.MAP_KEY_VALUE, 
-					Direction.OUTGOING).getEndNode();
-			leastUpperBoundKeyType =  new TypeDeducer(currentKeyNode, typeStore).getType();
-			leastUpperBoundValueType = new TypeDeducer(currentValueNode, typeStore).getType();
+		if (!currentNode.hasRelationship(Direction.OUTGOING, RelTypes.ELE))
+			return typeFactory.mapType(typeFactory.voidType(), typeFactory.voidType());		
+		Type leastUpperBoundKeyType = typeFactory.voidType();
+		Type leastUpperBoundValueType = typeFactory.voidType();
+		Iterable<Relationship> rels = currentNode.getRelationships(RelTypes.ELE, Direction.OUTGOING);
+		for (Relationship rel : rels) {
+			Node keyNode = rel.getEndNode();
+			Node valueNode = keyNode.getSingleRelationship(RelTypes.VALUE, Direction.OUTGOING).getEndNode();
+			leastUpperBoundKeyType = leastUpperBoundKeyType.lub(new TypeDeducer(keyNode, typeStore).getType());
+			leastUpperBoundValueType = leastUpperBoundKeyType.lub(new TypeDeducer(valueNode, typeStore).getType());
 		}
 		return typeFactory.mapType(leastUpperBoundKeyType, leastUpperBoundValueType);
 	}
 
 	private Type getSetType() {
-		return (!hasHead()) ? typeFactory.setType(typeFactory.voidType()) : typeFactory.setType(getLub());
+		return (!currentNode.hasRelationship(Direction.OUTGOING, RelTypes.ELE)) ? typeFactory.setType(typeFactory.voidType()) : typeFactory.setType(getSetLub());
 	}
 
 	private Type getListType() {
-		return (!hasHead()) ? typeFactory.listType(typeFactory.voidType()) : typeFactory.listType(getLub());
+		return (!hasHead()) ? typeFactory.listType(typeFactory.voidType()) : typeFactory.listType(getListLub());
+	}
+	
+	private Type getSetLub() {
+		Iterable<Relationship> rels = currentNode.getRelationships(RelTypes.ELE, Direction.OUTGOING);
+		Type leastUpperBoundType = typeFactory.voidType();
+		for (Relationship rel : rels) {
+			currentNode = rel.getEndNode();
+			leastUpperBoundType = leastUpperBoundType.lub(getType());
+		}
+		return leastUpperBoundType;
 	}
 
-	private Type getLub() {
+	private Type getListLub() {
 		currentNode = currentNode.getSingleRelationship(RelTypes.HEAD, Direction.OUTGOING).getEndNode();
 		Type leastUpperBoundType = getType();
-		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.NEXT_ELEMENT)) {
-			currentNode = currentNode.getSingleRelationship(RelTypes.NEXT_ELEMENT, 
+		while (currentNode.hasRelationship(Direction.OUTGOING, RelTypes.TO)) {
+			currentNode = currentNode.getSingleRelationship(RelTypes.TO, 
 					Direction.OUTGOING).getEndNode();
-			leastUpperBoundType = getType();
+			leastUpperBoundType = leastUpperBoundType.lub(getType());
 		}
 		return leastUpperBoundType;
 	}
