@@ -76,8 +76,9 @@ public class Queries {
 		Set<IValue> results = new HashSet<IValue>();
 		for (Node catchRefNode : index.get("node", "catch")) {
 			Node exceptionNode = getHead(getHead(getHead(getHead(catchRefNode))));
-			if (exceptionNode.getProperty(PropertyNames.STRING).equals("Exception"))
-				results.add(type.accept(new GraphDbValueRetrievalVisitor(catchRefNode, vf, ts)));		
+			if (exceptionNode.hasProperty(PropertyNames.STRING))
+				if (exceptionNode.getProperty(PropertyNames.STRING).equals("Exception"))
+					results.add(type.accept(new GraphDbValueRetrievalVisitor(catchRefNode, vf, ts)));		
 		}
 		return vf.set(results.toArray(new IValue[results.size()]));
 	}
