@@ -52,7 +52,7 @@ public class Queries {
 		for (Node switchRefNode : index.get("node", "switch")) {
 			Node switchHead = getHead(switchRefNode);
 			Node switchBodyRefNode = getNextEle(switchHead);
-			if (switchBodyRefNode.hasRelationship(RelTypes.HEAD, Direction.OUTGOING)) { // switch contains statements
+			if (switchBodyRefNode.hasRelationship(RelTypes.HEAD, Direction.OUTGOING)) {
 				Node switchBodyHead = getHead(switchBodyRefNode);
 				Node statement = switchBodyHead;
 				boolean hasDefaultCase = false;
